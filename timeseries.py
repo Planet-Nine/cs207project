@@ -187,6 +187,59 @@ class TimeSeries():
     def median(self):
         if self.len == 0: raise ValueError("Cannot perform operation on empty list")
         return np.median(self.data)
+    
+    def _check_times_helper(self,rhs):
+        if not self.times() == rhs.times():
+            raise ValueError(str(self)+' and '+str(rhs)+' must have the same times')
+    
+    def __eq__(self, other):
+        if isinstance(other, TimeSeries):
+            return (len(self) == len(other) and
+                all(self.time==other.time,self.data==other.data ))
+        else:
+            return NotImplemented
+        
+    def __add__(self, rhs):
+        try:
+            if isinstance(rhs, numbers.Real):
+                return TimeSeries(self.time,self.data+rhs) 
+            else: #
+                self._check_times_helper(rhs)
+                pairs = zip(self, rhs)
+                return TimeSeries(self.time,self.data+rhs.data)
+        except TypeError:
+            raise NotImplemented
+    
+    def __radd__(self, other): # other + self delegates to __add__
+        return self + other
+    
+    def __mul__(self, rhs):
+        try:
+            if isinstance(rhs, numbers.Real):
+                return TimeSeries(self.time,self.data*rhs) 
+            else: #
+                self._check_times_helper(rhs)
+                pairs = zip(self, rhs)
+                return TimeSeries(self.time,self.data*rhs.data)
+        except TypeError:
+            raise NotImplemented
+    
+    def __rmul__(self, other): # other + self delegates to __mul__
+        return self*other
+    
+    def __sub__(self, rhs):
+        try:
+            if isinstance(rhs, numbers.Real):
+                return TimeSeries(self.time,self.data-rhs) 
+            else: #
+                self._check_times_helper(rhs)
+                pairs = zip(self, rhs)
+                return TimeSeries(self.time,self.data-rhs.data)
+        except TypeError:
+            raise NotImplemented
+    
+    def __rsub__(self, other): # other + self delegates to __sub__
+        return -self + other
 
 def lazy(f):
     def inner(*args,**kwargs):
