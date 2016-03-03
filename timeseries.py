@@ -47,13 +47,13 @@ class LazyOperation():
     def eval(self):
         l = []
         for arg in self.args:
-            if type(arg).__name__ == type(self).__name__:
+            if isinstance(arg,LazyOperation):
                 l += [arg.eval()]
             else:
                 l += [arg]
         self.args = tuple(l)
         for kwarg in self.kwargs:
-            if type(self.kwargs[kwarg]).__name__ == type(self).__name__:
+            if isinstance(self.kwargs[kwarg],LazyOperation):
                 self.kwargs[kwarg] = self.kwargs[kwarg].eval()
         return self.function(*self.args,**self.kwargs)
 
