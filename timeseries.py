@@ -240,6 +240,12 @@ class TimeSeries():
     
     def __rsub__(self, other): # other + self delegates to __sub__
         return -self + other
+    
+    def __pos__(self):
+        return self.data
+    
+    def __neg__(self):
+        return -self.data
 
 def lazy(f):
     def inner(*args,**kwargs):
