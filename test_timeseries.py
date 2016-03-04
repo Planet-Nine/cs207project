@@ -45,6 +45,37 @@ class MyTest(unittest.TestCase):
             count += 1
         self.assertEqual(count, len(ts))
 
+    def test_pos(self):
+        self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__pos__, [-1,2,-4]  )
+        self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__pos__, [1,2,4]  )
+        self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__pos__, [-4,-6,-7] )
+        with self.assertRaises(ValueError):
+            TimeSeries([],[]).__pos__    
+
+    def test_neg(self):
+        self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__neg__, [1,-2,4]  )
+        self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__neg__, [-1,-2,-4]  )
+        self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__neg__, [4,6,7] )
+        with self.assertRaises(ValueError):
+            TimeSeries([],[]).__neg__ 
+
+
+    def test_abs(self):
+        self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__abs__, [1,2,4]  )
+        self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__abs__, [1,2,4]  )
+        self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__abs__, [4,6,7] )
+        with self.assertRaises(ValueError):
+            TimeSeries([],[]).__abs__
+
+    def test_bool(self):
+        self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__neg__, True  )
+        self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__neg__, True  )
+        self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__neg__, True )
+
+
+
+
+
 
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
