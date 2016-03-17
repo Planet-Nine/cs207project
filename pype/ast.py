@@ -25,6 +25,7 @@ class ASTNode(object):
     pfx = indent
     if isinstance(self, ASTNode):
         printed = ''.join([pfx,self.__class__.__name__,'('])
+        print(printed)
 
         if any(isinstance(child, ASTNode) for child in self.children):
             for i, child in enumerate(self.children):
@@ -69,10 +70,11 @@ class ASTImport(ASTNode):
   @property
   def module(self):
     return self.mod
+
 class ASTComponent(ASTNode): # TODO
   def __init__(self,name,expressions):
     super().__init__()
-    self.children = [name,*expressions]
+    self.children = [ASTID(name),*expressions]
     
   @property
   def name(self): # TODO return an element of self.children
@@ -80,29 +82,54 @@ class ASTComponent(ASTNode): # TODO
   @property
   def expressions(self): # TODO return one or more children
     return self.children[1:]
+
 class ASTInputExpr(ASTNode): # TODO
   def __init__(self,declaration_list=None):
     super().__init__()
     self.children = declaration_list
+
 class ASTOutputExpr(ASTNode): # TODO
   def __init__(self,declaration_list=None):
     super().__init__()
     self.children = declaration_list
+
+# class ASTAssignmentExpr(ASTNode): # TODO
+#   def __init__(self,ID,expression):
+#     super().__init__()
+#     self.children = [ID, expression]
+#   @property
+#   def binding(self): # TODO
+#     return self.children[0]
+#   @property
+#   def value(self): # TODO
+#     return self.children[1]
+
 class ASTAssignmentExpr(ASTNode): # TODO
   def __init__(self,ID,expression):
     super().__init__()
-    self.children = [ID, expression]
+    self.children = [ASTID(ID), expression]
   @property
   def binding(self): # TODO
     return self.children[0]
   @property
   def value(self): # TODO
     return self.children[1]
+
+# class ASTEvalExpr(ASTNode): # TODO
+#   def __init__(self,oper,argms):
+#     super().__init__()
+#     self.children = [oper,*argms]
+#   @property
+#   def op(self): # TODO
+#     return self.children[0]
+#   @property
+#   def args(self): # TODO
+#     return self.children[1:]
+ 
 class ASTEvalExpr(ASTNode): # TODO
   def __init__(self,oper,argms):
     super().__init__()
-    self.children = [oper,*argms]
-    
+    self.children = [ASTID(oper),*argms]
   @property
   def op(self): # TODO
     return self.children[0]
@@ -122,3 +149,4 @@ class ASTLiteral(ASTNode):
     super().__init__()
     self.value = value
     self.type = 'Scalar'
+

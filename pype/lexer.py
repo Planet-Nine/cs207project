@@ -27,10 +27,14 @@ t_OP_MUL = r'\*'
 t_OP_DIV = r'/'
 t_STRING = r'".*"'
 t_ASSIGN = r':='
-t_NUMBER = r'\d+'
 
 # Ignore whitespace
 t_ignore  = ' \t\r\f\v'
+
+def t_NUMBER(t):
+    r'\d+'
+    t.value = int(t.value)    
+    return t
 
 # A rule for IDs and reserved keywords
 def t_ID(t):
@@ -60,5 +64,6 @@ def find_column(input,token):
     column = (token.lexpos - last_cr) 
     return column
 
-# This actually builds the lexer.
+# # This actually builds the lexer.
 lexer = ply.lex.lex()
+
