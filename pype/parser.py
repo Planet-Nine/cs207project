@@ -1,6 +1,6 @@
 import ply.yacc
 
-from .lexer import tokens,reserved
+from .lexer import tokens,reserved, find_column
 from .ast import *
 
 # Here's an example production rule which constructs an AST node
@@ -119,7 +119,13 @@ def p_parameter_list(p):
 #       If you're interested, read section 6.8, but it requires a fairly deep
 #       understanding of LR parsers and the language specification.
 def p_error(p):
-    pass
+    if p:
+        print("Syntax error at '%s'"% str(p.value),"at line %d"%p.lexer.lineno+", column",find_column(p.lexer.lexdata, p))
+         # Just discard the token and tell the parser it's okay.
+        parser.errok()
+    else:
+        print("Syntax error at EOF")
+    #pass
 
 start = 'program'
 parser = ply.yacc.yacc() # To get more information, add debug=True
