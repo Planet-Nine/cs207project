@@ -25,7 +25,6 @@ class ASTNode(object):
     pfx = indent
     if isinstance(self, ASTNode):
         printed = ''.join([pfx,self.__class__.__name__,'('])
-        print(printed)
 
         if any(isinstance(child, ASTNode) for child in self.children):
             for i, child in enumerate(self.children):
