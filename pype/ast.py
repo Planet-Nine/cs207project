@@ -24,20 +24,17 @@ class ASTNode(object):
     # TODO
     pfx = indent
     if isinstance(self, ASTNode):
-        printed = ''.join([pfx,self.__class__.__name__,'('])
+        printed = ''.join([pfx,self.__class__.__name__])
 
         if any(isinstance(child, ASTNode) for child in self.children):
             for i, child in enumerate(self.children):
-                if i != 0:
-                    printed += ','
                 printed += '\n'
                 printed += child.pprint(indent+'  ')
-            printed += ')'
             return printed
         else:
             # None of the children as nodes, simply join their repr on a single
             # line.
-            printed += ', '.join(repr(child) for child in self.children)+')'
+            printed += ', '.join(repr(child) for child in self.children)
             return printed
 
 
