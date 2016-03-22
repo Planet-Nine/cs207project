@@ -82,12 +82,14 @@ class ASTComponent(ASTNode): # TODO
 class ASTInputExpr(ASTNode): # TODO
   def __init__(self,declaration_list=None):
     super().__init__()
-    self.children = declaration_list
+    if declaration_list:
+        self.children = declaration_list
 
 class ASTOutputExpr(ASTNode): # TODO
   def __init__(self,declaration_list=None):
     super().__init__()
-    self.children = declaration_list
+    if declaration_list:
+        self.children = declaration_list
 
 # class ASTAssignmentExpr(ASTNode): # TODO
 #   def __init__(self,ID,expression):
