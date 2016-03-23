@@ -70,7 +70,6 @@ def p_declaration(p):
   else:
       p[0] = ASTID(p[1])
 
-# How does it know the difference between this and lines 67 and 95?
 def p_type(p):
   r'''type : ID'''
   p[0] = p[1]
@@ -80,12 +79,12 @@ def p_assign(p):
   p[0] = ASTAssignmentExpr(p[3], p[4])
 
 def p_funcexpr(p):
-  r'''expression : LPAREN ID parameter_list RPAREN'''
-  p[0] = ASTEvalExpr(p[2],p[3])
-
-def p_dontunderstand(p):
-  r'''expression : LPAREN ID RPAREN'''
-  p[0] = p[2]
+  r'''expression : LPAREN ID parameter_list RPAREN
+                 | LPAREN ID RPAREN'''
+  if len(p)>4:
+    p[0] = ASTEvalExpr(p[2],p[3])
+  else:
+    p[0] = ASTEvalExpr(p[2],())
 
 def p_op(p):
   r'''expression : LPAREN OP_ADD parameter_list RPAREN
@@ -112,12 +111,6 @@ def p_parameter_list(p):
   else:
     p[0] = [p[1]]
 
-# TODO: Write an error handling function. You should attempt to make the error
-#       message sensible. For instance, print out the line and column numbers to
-#       help find your error.
-# NOTE: You do NOT need to write production rules with error tokens in them.
-#       If you're interested, read section 6.8, but it requires a fairly deep
-#       understanding of LR parsers and the language specification.
 def p_error(p):
     if p:
         print("Syntax error at '%s'"% str(p.value),"at line %d"%p.lexer.lineno+", column",find_column(p.lexer.lexdata, p))
@@ -125,7 +118,6 @@ def p_error(p):
         parser.errok()
     else:
         print("Syntax error at EOF")
-    #pass
 
 start = 'program'
 parser = ply.yacc.yacc() # To get more information, add debug=True
