@@ -22,9 +22,6 @@ class SymbolTableVisitor(ASTVisitor):
       self._component = node.name
 
     if isinstance(node, ASTAssignmentExpr):
-      try:   # If it is already in the table, it's an output expression
-        checkoutput = self.symbol_table[self._component][node.binding.name]
-      except:
         self.symbol_table.addsym(Symbol(node.binding.name, SymbolType.var, None), self._component)
 
     if isinstance(node, ASTInputExpr):
@@ -32,7 +29,3 @@ class SymbolTableVisitor(ASTVisitor):
         for child in node.children:
           self.symbol_table.addsym(Symbol(child.name, SymbolType.input, None), self._component)
 
-    if isinstance(node, ASTOutputExpr):  # overwrite any assignment expressions
-      if len(node.children) > 0:
-        for child in node.children:
-          self.symbol_table.addsym(Symbol(child.name, SymbolType.output, None), self._component)
