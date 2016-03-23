@@ -10,17 +10,16 @@ class PrettyPrint(ASTVisitor):
         s += '  '
         u = u.parent
     print(''.join([s,node.__class__.__name__]))
-    # TODO
 
 class CheckSingleAssignment(ASTVisitor):
   def __init__(self):
     self.pairs = []
     self.component = None
     self.components = []
-    pass # TODO
+
   def visit(self, node):
     if isinstance(node,ASTComponent):
-        self.component = node.name.name
+        self.component = node.name
         if self.component in self.components:
             raise SyntaxError("Multiple assignment of component '%s' is not supported"%self.component)
         else:
@@ -39,4 +38,3 @@ class CheckSingleAssignment(ASTVisitor):
                 raise SyntaxError("Multiple assignment of '%s' in component '%s' is not supported"%pair)
             else:
                 self.pairs += [pair] 
-    # TODO
