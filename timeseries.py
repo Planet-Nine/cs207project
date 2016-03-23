@@ -1,5 +1,7 @@
 import numpy as np
 from pytest import raises
+import pype
+
 def f(a):
     return a
 
@@ -181,9 +183,14 @@ class TimeSeries():
     def lazy(self):
         lazy_fun = LazyOperation(f,self)
         return lazy_fun
+    @pype.component
     def mean(self):
         if self.len == 0: raise ValueError("Cannot perform operation on empty list")
         return np.mean(self.data)
+    @pype.component
+    def std(self):
+        if self.len == 0: raise ValueError("Cannot perform operation on empty list")
+        return np.std(self.data)
     def median(self):
         if self.len == 0: raise ValueError("Cannot perform operation on empty list")
         return np.median(self.data)
