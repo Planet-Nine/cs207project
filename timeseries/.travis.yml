@@ -2,30 +2,15 @@
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
 
-sudo: false
 language: python
-virtualenv:
-  system_site_packages: true
-env:
-  matrix:
-    - DISTRIB="ubuntu" PYTHON_VERSION="2.7" COVERAGE="true"
-    - DISTRIB="conda" PYTHON_VERSION="2.7" COVERAGE="false"
-    - DISTRIB="conda" PYTHON_VERSION="3.3" COVERAGE="false"
-    - DISTRIB="conda" PYTHON_VERSION="3.4" COVERAGE="false"
-addons:
-  apt:
-    packages:
-      - git
-      - python-pip
-install:
-  - source tests/travis_install.sh
-  - pip install -r requirements.txt
-before_script:
-  - git config --global user.email "you@example.com"
-  - git config --global user.name "Your Name"
+python:
+    - "3.5"
+before_install:
+    - pip install pytest pytest-cov
+    - pip install ply
+    - pip install coveralls
+    - python setup.py install
 script:
-  - python setup.py test
+    - py.test
 after_success:
-  - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
-cache:
-  - apt
+    - coveralls
