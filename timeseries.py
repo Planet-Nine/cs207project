@@ -1,5 +1,5 @@
 import numpy as np
-
+from pytest import raises
 def f(a):
     return a
 
@@ -242,11 +242,16 @@ class TimeSeries():
         return -self + other
     
     def __pos__(self):
-        return self.data
+        if self.len!=0:
+            return self.data
+        else:
+            raise ValueError
     
     def __neg__(self):
-        return -self.data
-
+        if self.len!=0:
+            return -self.data
+        else:
+            raise ValueError
 def lazy(f):
     def inner(*args,**kwargs):
         inner.__name__ = f.__name__
