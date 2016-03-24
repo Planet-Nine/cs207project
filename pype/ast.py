@@ -246,7 +246,7 @@ class ASTInputExpr(ASTNode):
     >>> declaration_list = [ASTID('name'),ASTNode()]
     >>> a = ASTInputExpr(declaration_list)
     >>> [child.__class__.__name__ for child in a.children]
-    ['ASTID','ASTNode']
+    ['ASTID', 'ASTNode']
     >>> print(a.pprint())
     ASTInputExpr
       ASTID
@@ -279,7 +279,7 @@ class ASTOutputExpr(ASTNode):
     >>> declaration_list = [ASTID('name'),ASTNode()]
     >>> a = ASTOutputExpr(declaration_list)
     >>> [child.parent.__class__.__name__ for child in a.children]
-    ['ASTOutputExpr','ASTOutputExpr']
+    ['ASTOutputExpr', 'ASTOutputExpr']
   """
   def __init__(self,declaration_list=None):
     super().__init__()
@@ -348,7 +348,7 @@ class ASTEvalExpr(ASTNode):
     >>> a.op.__class__.__name__
     'ASTID'
     >>> [child.__class__.__name__ for child in a.args]
-    ['ASTNode','ASTNode']
+    ['ASTNode', 'ASTNode']
     >>> a = ASTEvalExpr('op2',[])
     >>> [child.__class__.__name__ for child in a.children]
     ['ASTID']
