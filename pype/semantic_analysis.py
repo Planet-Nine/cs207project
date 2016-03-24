@@ -1,6 +1,27 @@
 from .ast import *
 
 class PrettyPrint(ASTVisitor):
+  """
+    A class that takes no arguments and defines a printing visitor for an abstract syntax tree
+    
+    Parameters
+    ----------
+   
+    Returns
+    -------
+    visit(node): 
+        returns nothing, but prints out the class name of a given node
+    
+    Examples
+    --------
+    >>> a,b,c = ASTNode(),ASTNode(),ASTNode()
+    >>> a.children = [b,c]
+    >>> d = PrettyPrint()
+    >>> a.walk(d)
+    ASTNode
+      ASTNode
+      ASTNode
+  """
   def __init__(self):
     pass
   def visit(self, node):
@@ -12,6 +33,36 @@ class PrettyPrint(ASTVisitor):
     print(''.join([s,node.__class__.__name__]))
 
 class CheckSingleAssignment(ASTVisitor):
+  """
+    A class that takes no arguments and defines a checking single assignment visitor for an abstract syntax tree
+    
+    Parameters
+    ----------
+   
+    Returns
+    -------
+    __init__: 
+        returns nothing, but sets the pairs attribute of the visitor to [], the component attribute of the visitor to None
+        and the components attribute of the visitor to []
+    
+    Examples
+    --------
+    >>> e,f = ASTNode(),ASTNode()
+    >>> c,b = ASTComponent('comp1',[e]),ASTComponent('comp1',[f])
+    >>> a = ASTProgram([c,b])
+    >>> d = CheckSingleAssignment()
+    >>> a.walk(d)
+    Traceback (most recent call last):
+        ...
+    SyntaxError: Multiple assignment of component 'comp1' is not supported
+    >>> e,f = ASTInputExpr([ASTID('a','string')]),ASTAssignmentExpr('a',ASTNode())
+    >>> c = ASTComponent('comp1',[e,f])
+    >>> d = CheckSingleAssignment()
+    >>> c.walk(d)
+    Traceback (most recent call last):
+        ...
+    SyntaxError: Multiple assignment of 'a' in component 'comp1' is not supported
+  """
   def __init__(self):
     self.pairs = []
     self.component = None

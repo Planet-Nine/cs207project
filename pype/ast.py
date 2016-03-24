@@ -98,8 +98,7 @@ class ASTNode(object):
 
 
     else:
-        printed = pfx + repr(self)
-        return printed
+        pass
 
   def walk(self, visitor):
     '''Traverses an AST, calling visitor.visit() on every node.
