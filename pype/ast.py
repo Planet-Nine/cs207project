@@ -1,5 +1,5 @@
 class ASTVisitor():
-    """
+  """
     A class that takes no arguments and is generally used with the walk method of an AST
     
     Parameters
@@ -19,7 +19,7 @@ class ASTVisitor():
     >>> a.visit(b)
     >>> a.return_value()
     >>> assert isinstance( a, ASTVisitor ) == True
-    """
+  """
   def visit(self, astnode):
     'A read-only function which looks at a single AST node.'
     pass
@@ -27,7 +27,7 @@ class ASTVisitor():
     return None
 
 class ASTNode(object):
-    """
+  """
     A class that takes no arguments and defines a node in an abstract syntax tree
     
     Parameters
@@ -65,7 +65,7 @@ class ASTNode(object):
       ASTNode
     >>> d = ASTVisitor()
     >>> a.walk(d)
-    """
+  """
   def __init__(self):
     self.parent = None
     self._children = []
@@ -114,7 +114,7 @@ class ASTNode(object):
     return visitor.return_value()
 
 class ASTProgram(ASTNode):
-    """
+  """
     A class that takes a list of statements as its argument and defines the overarching program node 
     in an abstract syntax tree
     
@@ -140,13 +140,13 @@ class ASTProgram(ASTNode):
       ASTNode
     >>> d = ASTVisitor()
     >>> a.walk(d)
-    """
+  """
   def __init__(self, statements):
     super().__init__()
     self.children = statements
 
 class ASTImport(ASTNode):
-    """
+  """
     A class that takes a string which is the name of a module as its argument and defines an import 
     node in an abstract syntax tree
     
@@ -173,7 +173,7 @@ class ASTImport(ASTNode):
       ASTNode
     >>> b.module
     'mod'
-    """
+  """
   def __init__(self, mod):
     super().__init__()
     self.mod = mod
@@ -182,7 +182,7 @@ class ASTImport(ASTNode):
     return self.mod
 
 class ASTComponent(ASTNode): 
-    """
+  """
     A class that takes a string which serves as the name of the component and expressions as its argument 
     and defines a component node in an abstract syntax tree
     
@@ -215,7 +215,7 @@ class ASTComponent(ASTNode):
       ASTComponent
         ASTID
         ASTNode
-    """
+  """
   def __init__(self,name,expressions):
     super().__init__()
     self.children = [ASTID(name),*expressions]
@@ -228,7 +228,7 @@ class ASTComponent(ASTNode):
     return self.children[1:]
 
 class ASTInputExpr(ASTNode): 
-    """
+  """
     A class that takes a list of declarations as its argument 
     and defines an input expression node in an abstract syntax tree
     
@@ -251,14 +251,14 @@ class ASTInputExpr(ASTNode):
     ASTInputExpr
       ASTID
       ASTNode
-    """
+  """
   def __init__(self,declaration_list=None):
     super().__init__()
     if declaration_list:
         self.children = declaration_list
 
 class ASTOutputExpr(ASTNode):
-    """
+  """
     A class that takes a list of declarations as its argument 
     and defines an output expression node in an abstract syntax tree
     
@@ -280,14 +280,14 @@ class ASTOutputExpr(ASTNode):
     >>> a = ASTOutputExpr(declaration_list)
     >>> [child.parent.__class__.__name__ for child in a.children]
     ['ASTOutputExpr','ASTOutputExpr']
-    """
+  """
   def __init__(self,declaration_list=None):
     super().__init__()
     if declaration_list:
         self.children = declaration_list
 
 class ASTAssignmentExpr(ASTNode): 
-    """
+  """
     A class that takes an ID to assign to and an expression to be assigned as its arguments 
     and defines an assignment expression node in an abstract syntax tree
     
@@ -312,7 +312,7 @@ class ASTAssignmentExpr(ASTNode):
     'ASTID'
     >>> a.value.__class__.__name__
     'ASTNode'
-    """
+  """
   def __init__(self,ID,expression):
     super().__init__()
     self.children = [ASTID(ID), expression]
@@ -324,7 +324,7 @@ class ASTAssignmentExpr(ASTNode):
     return self.children[1]
 
 class ASTEvalExpr(ASTNode): 
-    """
+  """
     A class that takes an operator and its arguments as its arguments 
     and defines an expression evaluation node in an abstract syntax tree
     
@@ -352,7 +352,7 @@ class ASTEvalExpr(ASTNode):
     >>> a = ASTEvalExpr('op2',[])
     >>> [child.__class__.__name__ for child in a.children]
     ['ASTID']
-    """
+  """
   def __init__(self,oper,argms):
     super().__init__()
     if len(argms) > 0:
@@ -367,7 +367,7 @@ class ASTEvalExpr(ASTNode):
     return self.children[1:]
 
 class ASTID(ASTNode):
-    """
+  """
     A class that takes a name and a declaration of its type as its arguments 
     and defines an ID node in an abstract syntax tree
     
@@ -390,14 +390,14 @@ class ASTID(ASTNode):
     'Joe'
     >>> a.type
     'component'
-    """
+  """
   def __init__(self, name, typedecl=None):
     super().__init__()
     self.name = name
     self.type = typedecl
 
 class ASTLiteral(ASTNode):
-    """
+  """
     A class that takes a value as its argument
     and defines a literal node in an abstract syntax tree
     
@@ -419,7 +419,7 @@ class ASTLiteral(ASTNode):
     5
     >>> a.type
     'Scalar'
-    """
+  """
   def __init__(self, value):
     super().__init__()
     self.value = value
