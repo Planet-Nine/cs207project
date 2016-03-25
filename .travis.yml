@@ -10,7 +10,7 @@ before_install:
     - pip install ply
     - pip install coveralls
     - pip install sphinx
-    - python setup.py install
+    - pip install timeseries
 script:
     - cd timeseries
     - python setup.py test
