@@ -55,7 +55,7 @@ class CheckSingleAssignment(ASTVisitor):
     Traceback (most recent call last):
         ...
     SyntaxError: Multiple assignment of component 'comp1' is not supported
-    >>> e,f = ASTInputExpr([ASTID('a','string')]),ASTAssignmentExpr('a',ASTNode())
+    >>> e,f = ASTAssignmentExpr('a',ASTNode()),ASTInputExpr([ASTID('a','string')])
     >>> c = ASTComponent('comp1',[e,f])
     >>> d = CheckSingleAssignment()
     >>> c.walk(d)

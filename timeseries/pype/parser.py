@@ -82,16 +82,22 @@ def p_funcexpr(p):
   r'''expression : LPAREN ID parameter_list RPAREN
                  | LPAREN ID RPAREN'''
   if len(p)>4:
-    p[0] = ASTEvalExpr(p[2],p[3])
+    p[0] = ASTEvalExpr(ASTID(p[2]),p[3])
   else:
-    p[0] = ASTEvalExpr(p[2],())
+    p[0] = ASTEvalExpr(ASTID(p[2]),())
 
-def p_op(p):
-  r'''expression : LPAREN OP_ADD parameter_list RPAREN
-                 | LPAREN OP_SUB parameter_list RPAREN
-                 | LPAREN OP_MUL parameter_list RPAREN
-                 | LPAREN OP_DIV parameter_list RPAREN'''
-  p[0] = ASTEvalExpr(p[2], p[3])
+def p_op_add_expression(p):
+  r'''expression : LPAREN OP_ADD parameter_list RPAREN'''
+  p[0] = ASTEvalExpr(ASTID(name='__add__'), p[3])
+def p_op_sub_expression(p):
+  r'''expression : LPAREN OP_SUB parameter_list RPAREN'''
+  p[0] = ASTEvalExpr(ASTID(name='__sub__'), p[3])
+def p_op_mul_expression(p):
+  r'''expression : LPAREN OP_MUL parameter_list RPAREN'''
+  p[0] = ASTEvalExpr(ASTID(name='__mul__'), p[3])
+def p_op_div_expression(p):
+  r'''expression : LPAREN OP_DIV parameter_list RPAREN'''
+  p[0] = ASTEvalExpr(ASTID(name='__truediv__'), p[3])
 
 def p_exprid(p):
   r'''expression : ID'''
