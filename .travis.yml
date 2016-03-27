@@ -13,7 +13,6 @@ before_install:
     - pip install timeseries
 script:
     - cd timeseries
-    - python setup.py test
-    - python setup.py doctest
+    - py.test --doctest-modules
 after_success:
     - coveralls
