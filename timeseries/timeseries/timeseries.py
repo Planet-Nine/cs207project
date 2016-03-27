@@ -129,6 +129,55 @@ class TimeSeries():
     Traceback (most recent call last):
         ...
     TypeError: cannot perform reduce with flexible type
+    >>> a = TimeSeries([0,5,10], [1,2,3])
+    >>> lazy_series = a.lazy
+    >>> assert isinstance(lazy_series.eval(),TimeSeries)==True
+    >>> a = TimeSeries([0,5], [1,2,3])
+    Traceback (most recent call last):
+        ...
+    ValueError: Not the same length
+    >>> a = TimeSeries([0,5,10], [1,2,3])
+    >>> a[1]
+    Traceback (most recent call last):
+        ...
+    IndexError: Time does not exist
+    >>> a[1] = 5
+    Traceback (most recent call last):
+        ...
+    IndexError: Time does not exist
+    >>> assert (0 in a) == True
+    >>> a
+    [(0, 1), (5, 2), (10, 3)]
+    >>> a = TimeSeries(range(11),range(1,12))
+    >>> a
+    [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), ...], length=11
+    >>> a.values()
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    >>> a.items()
+    [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11)]
+    >>> a.std()
+    3.1622776601683795
+    >>> b = TimeSeries([1,2],[3,4])
+    >>> a._check_times_helper(b)
+    Traceback (most recent call last):
+        ...
+    ValueError: [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), ...], length=11 and [(1, 3), (2, 4)] must have the same times
+    >>> a == b
+    False
+    >>> a == 'hi'
+    False
+    >>> 2+b
+    [(1, 5), (2, 6)]
+    >>> TimeSeries([1,2],[5,6])+b
+    [(1, 8), (2, 10)]
+    >>> 2*b
+    [(1, 6), (2, 8)]
+    >>> TimeSeries([1,2],[5,6])*b
+    [(1, 15), (2, 24)]
+    >>> 2-b
+    [(1, -1), (2, -2)]
+    >>> TimeSeries([1,2],[5,6])-b
+    [(1, 2), (2, 2)]
     
     Notes
     -----
@@ -137,7 +186,7 @@ class TimeSeries():
     """
     def __init__(self,time,data):
         if len(time)!=len(data):
-            raise "Not the same length"
+            raise ValueError("Not the same length")
         self.time=np.array(time)
         self.data=np.array(data)
         self.index=0
@@ -148,10 +197,10 @@ class TimeSeries():
     def __getitem__(self, time):
         if time in self.time:
             return int(self.data[np.where(self.time==time)])
-        raise "Time does not exist"
+        raise IndexError("Time does not exist")
     def __setitem__(self,time,value):
         if time not in self.time:
-             raise "Time does not exist"
+             raise IndexError("Time does not exist")
         self.data[np.where(self.time==time)]=value
     def __contains__(self, time):
         return time in self.time
@@ -257,7 +306,7 @@ class TimeSeries():
     
     def __pos__(self):
         if self.len!=0:
-            return self.data
+            return TimeSeries(self.time,self.data)
         else:
             raise ValueError
     
