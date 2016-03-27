@@ -1,6 +1,7 @@
 import numpy as np
 from pytest import raises
 import pype
+import numbers
 
 def f(a):
     return a
@@ -35,6 +36,8 @@ class LazyOperation():
     >>> thunk = lazy_mul( lazy_add(1,2), 4)
     >>> thunk.eval()
     12
+    >>> print(thunk)
+    LazyOperation( lazy_mul, args = (3, 4), kwargs = {} )
     """
       
     def __init__(self,function,*args,**kwargs):
@@ -101,6 +104,11 @@ class TimeSeries():
     [1, 3, 5]
     >>> a = TimeSeries([0,5,10], [1,2,3])
     >>> b = TimeSeries([2.5,7.5], [100, -100])
+    >>> c = TimeSeries([0,5,10], [1,2,3])
+    >>> a == c
+    True
+    >>> a == b
+    False
     >>> print(a.interpolate([1])) 
     [(1, 1.2)]
     >>> print(a.interpolate(b.times()))
@@ -201,8 +209,7 @@ class TimeSeries():
     
     def __eq__(self, other):
         if isinstance(other, TimeSeries):
-            return (len(self) == len(other) and
-                all(self.time==other.time,self.data==other.data ))
+            return ((len(self) == len(other)) and all(self.time==other.time) and all(self.data==other.data ))
         else:
             return NotImplemented
         
@@ -210,7 +217,7 @@ class TimeSeries():
         try:
             if isinstance(rhs, numbers.Real):
                 return TimeSeries(self.time,self.data+rhs) 
-            else: #
+            else: 
                 self._check_times_helper(rhs)
                 pairs = zip(self, rhs)
                 return TimeSeries(self.time,self.data+rhs.data)
@@ -256,9 +263,22 @@ class TimeSeries():
     
     def __neg__(self):
         if self.len!=0:
-            return -self.data
+            return TimeSeries(self.time, -1*self.data)
         else:
             raise ValueError
+
+    def __abs__(self):
+        if self.len!=0:
+            return np.sqrt(np.sum(self.data*self.data))
+        else:
+            raise ValueError
+    
+    def __bool__(self):
+        if self.len!=0:
+            return bool(abs(self))
+        else:
+            raise ValueError
+
 def lazy(f):
     def inner(*args,**kwargs):
         inner.__name__ = f.__name__

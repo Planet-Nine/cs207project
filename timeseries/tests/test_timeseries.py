@@ -60,23 +60,33 @@ class MyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             TimeSeries([],[]).__neg__() 
 
+    def test_abs(self):
+        self.assertEqual( abs(TimeSeries([1,2,3],[-1,2,-4])), np.sqrt(21)  )
+        self.assertEqual( abs(TimeSeries([1,2,3],[1,2,4])), np.sqrt(21)  )
+        self.assertEqual( abs(TimeSeries([1,2,3],[0,0,0])), 0 )
+        with self.assertRaises(ValueError):
+            abs(TimeSeries([],[]))
 
-    # def test_abs(self):
-    #     self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__abs__, [1,2,4]  )
-    #     self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__abs__, [1,2,4]  )
-    #     self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__abs__, [4,6,7] )
-    #     with self.assertRaises(ValueError):
-    #         TimeSeries([],[]).__abs__
+    def test_bool(self):
+        self.assertEqual( bool(TimeSeries([1,2,3],[-1,2,-4])), True )
+        self.assertEqual( bool(TimeSeries([1,2,3],[1,2,4])), True)
+        self.assertEqual( bool(TimeSeries([1,2,3],[0,0,0])), False)
 
-    # def test_bool(self):
-    #     self.assertEqual( TimeSeries([1,2,3],[-1,2,-4]).__neg__, True  )
-    #     self.assertEqual( TimeSeries([1,2,3],[1,2,4]).__neg__, True  )
-    #     self.assertEqual( TimeSeries([1,2,3],[-4,-6,-7]).__neg__, True )
+    def test_add(self):
+        a = TimeSeries([1,2,3], [1,2,3])
+        b = TimeSeries([1,2,3], [4,5,6])
+        c = TimeSeries([4,5,6], [4,5,6])
+        self.assertEqual(a+b, TimeSeries([1,2,3],[5,7,9]))
+        with self.assertRaises(ValueError):
+            d = b + c
 
-
-
-
-
+    def test_mul(self):
+        a = TimeSeries([1,2,3], [1,2,3])
+        b = TimeSeries([1,2,3], [4,5,6])
+        c = TimeSeries([4,5,6], [4,5,6])
+        self.assertEqual(a*b, TimeSeries([1,2,3],[4,10,18]))
+        with self.assertRaises(ValueError):
+            d = b * c
 
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
