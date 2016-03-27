@@ -15,5 +15,5 @@ script:
     - cd timeseries
     - py.test --doctest-modules
 after_success:
-    - cd timeseries
+    - cd ..
     - coveralls
