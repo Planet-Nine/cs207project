@@ -14,5 +14,6 @@ before_install:
 script:
     - cd timeseries
     - py.test --doctest-modules
+    - cd ..
 after_success:
     - coveralls
