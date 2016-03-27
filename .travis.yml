@@ -8,11 +8,11 @@ python:
 before_install:
     - pip install pytest pytest-cov
     - pip install ply
-    - pip install coveralls
     - pip install sphinx
     - pip install timeseries
 script:
     - cd timeseries
+    - pip install coveralls
     - py.test --doctest-modules
 after_success:
     - coveralls
