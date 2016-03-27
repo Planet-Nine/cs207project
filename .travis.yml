@@ -14,5 +14,6 @@ before_install:
 script:
     - cd timeseries
     - python setup.py test
+    - python setup.py doctest
 after_success:
     - coveralls
