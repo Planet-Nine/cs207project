@@ -101,3 +101,10 @@ class SymbolTable(object):
       The name of the new scope
     """
     self.T[scope] = {}
+  def lookupsym(self, sym, scope=None):
+    if scope is not None:
+      if sym in self.T[scope]:
+        return self.T[scope][sym]
+    if sym in self.T['global']:
+      return self.T['global'][sym]
+    return None 
