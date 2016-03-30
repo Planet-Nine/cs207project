@@ -290,6 +290,20 @@ class TimeSeries():
     def __rmul__(self, other): # other + self delegates to __mul__
         return self*other
     
+    def __div__(self, rhs):
+        try:
+            if isinstance(rhs, numbers.Real):
+                return TimeSeries(self.time,self.data/rhs) 
+            else: #
+                self._check_times_helper(rhs)
+                pairs = zip(self, rhs)
+                return TimeSeries(self.time,self.data/rhs.data)
+        except TypeError:
+            raise NotImplemented
+    
+    def __rmul__(self, other): # other + self delegates to __mul__
+        return self/other
+    
     def __sub__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
