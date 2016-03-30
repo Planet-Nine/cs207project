@@ -261,7 +261,7 @@ class TimeSeries():
             return ((len(self) == len(other)) and all(self.time==other.time) and all(self.data==other.data ))
         else:
             return NotImplemented
-        
+    @pype.component        
     def __add__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
@@ -275,7 +275,7 @@ class TimeSeries():
     
     def __radd__(self, other): # other + self delegates to __add__
         return self + other
-    
+    @pype.component    
     def __mul__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
@@ -286,10 +286,10 @@ class TimeSeries():
                 return TimeSeries(self.time,self.data*rhs.data)
         except TypeError:
             raise NotImplemented
-    
+    @pype.component    
     def __rmul__(self, other): # other + self delegates to __mul__
         return self*other
-    
+    @pype.component
     def __div__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
@@ -300,10 +300,13 @@ class TimeSeries():
                 return TimeSeries(self.time,self.data/rhs.data)
         except TypeError:
             raise NotImplemented
-    
+    @pype.component
+    def __truediv__(self, rhs):
+        return self / rhs
+    @pype.component    
     def __rmul__(self, other): # other + self delegates to __mul__
         return self/other
-    
+    @pype.component    
     def __sub__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
@@ -314,16 +317,16 @@ class TimeSeries():
                 return TimeSeries(self.time,self.data-rhs.data)
         except TypeError:
             raise NotImplemented
-    
+    @pype.component    
     def __rsub__(self, other): # other + self delegates to __sub__
         return -self + other
-    
+    @pype.component    
     def __pos__(self):
         if self.len!=0:
             return TimeSeries(self.time,self.data)
         else:
             raise ValueError
-    
+    @pype.component    
     def __neg__(self):
         if self.len!=0:
             return TimeSeries(self.time, -1*self.data)
