@@ -43,8 +43,8 @@ class SymbolTableVisitor(ASTVisitor):
       imp.add_symbols(self.symbol_table)
 
     if isinstance(node, ASTComponent):
-      self.symbol_table.addsym(Symbol(node.name, SymbolType.component, None))
-      self.symbol_table.addscope(node.name)
+      self.symbol_table.addsym(Symbol(node.name.name, SymbolType.component, None))
+      self.symbol_table.addscope(node.name.name)
       self._component = node.name.name
 
     if isinstance(node, ASTAssignmentExpr):
