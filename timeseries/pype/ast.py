@@ -234,7 +234,7 @@ class ASTComponent(ASTNode):
     >>> a = ASTComponent(name,expressions)
     >>> statements = [a]
     >>> b = ASTProgram(statements)
-    >>> a.name
+    >>> a.name.name
     'comp1'
     >>> [child.__class__.__name__ for child in a.expressions]
     ['ASTNode']
