@@ -116,7 +116,7 @@ class ASTNode(object):
 
     else:
         pass
-
+ 
   def walk(self, visitor):
     '''Traverses an AST, calling visitor.visit() on every node.
     This is a depth-first, pre-order traversal. Parents will be visited before
@@ -250,7 +250,7 @@ class ASTComponent(ASTNode):
     
   @property
   def name(self): # Return an element of self.children
-    return self.children[0].name
+    return self.children[0]
   @property
   def expressions(self): # Return one or more children
     return self.children[1:]

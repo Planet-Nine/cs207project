@@ -70,7 +70,7 @@ class CheckSingleAssignment(ASTVisitor):
 
   def visit(self, node):
     if isinstance(node,ASTComponent):
-        self.component = node.name
+        self.component = node.name.name
         if self.component in self.components:
             raise SyntaxError("Multiple assignment of component '%s' is not supported"%self.component)
         else:
