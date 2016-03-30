@@ -45,7 +45,7 @@ class SymbolTableVisitor(ASTVisitor):
     if isinstance(node, ASTComponent):
       self.symbol_table.addsym(Symbol(node.name, SymbolType.component, None))
       self.symbol_table.addscope(node.name)
-      self._component = node.name
+      self._component = node.name.name
 
     if isinstance(node, ASTAssignmentExpr):
         self.symbol_table.addsym(Symbol(node.binding.name, SymbolType.var, None), self._component)
