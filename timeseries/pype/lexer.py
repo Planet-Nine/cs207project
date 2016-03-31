@@ -32,8 +32,8 @@ t_ASSIGN = r':='
 t_ignore  = ' \t\r\f\v'
 
 def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)    
+    r'[\+-]?\d+\.?\d*'
+    t.value = float(t.value)    
     return t
 
 # A rule for IDs and reserved keywords
