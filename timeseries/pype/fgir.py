@@ -62,8 +62,8 @@ class Flowgraph(object):
     return [i for (i,n) in self.nodes.items() if nodeid in self.nodes[i].inputs]
 
    
- def topological_sort(self):         # recursive dfs with 
-    L = []                      # additional list for order of nodes
+ def topological_sort(self):
+    L = []
     color = { u : "white" for u in self.nodes.keys() }
     found_cycle = False
     for u in graph:
@@ -72,11 +72,11 @@ class Flowgraph(object):
         if found_cycle[0]:
             break
  
-    if found_cycle:           # if there is a cycle, 
-        raise ValueError('The Flowgraph has loops')                 # then return an empty list  
+    if found_cycle:
+        raise ValueError('The Flowgraph has loops')
  
-    L.reverse()                  # reverse the list
-    return L                     # L contains the topological sort
+    L.reverse()  
+    return L   
  
  
 def dfs_visit(self, u, color, L, found_cycle):
@@ -89,8 +89,8 @@ def dfs_visit(self, u, color, L, found_cycle):
             return
         if color[v] == "white":
             dfs_visit(self, v, color, L, found_cycle)
-    color[u] = "black"      # when we're done with u,
-    L.append(u)             # add u to list (reverse it later!)
+    color[u] = "black" 
+    L.append(u)
 
     
     
