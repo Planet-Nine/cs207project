@@ -290,7 +290,7 @@ class TimeSeries():
     def __rmul__(self, other): # other + self delegates to __mul__
         return self*other
     @pype.component
-    def __div__(self, rhs):
+    def __truediv__(self, rhs):
         try:
             if isinstance(rhs, numbers.Real):
                 return TimeSeries(self.time,self.data/rhs) 
@@ -299,13 +299,8 @@ class TimeSeries():
                 pairs = zip(self, rhs)
                 return TimeSeries(self.time,self.data/rhs.data)
         except TypeError:
-            raise NotImplemented
-    @pype.component
-    def __truediv__(self, rhs):
-        return self / rhs
-    @pype.component    
-    def __rmul__(self, other): # other + self delegates to __mul__
-        return self/other
+            raise NotImplemented 
+
     @pype.component    
     def __sub__(self, rhs):
         try:

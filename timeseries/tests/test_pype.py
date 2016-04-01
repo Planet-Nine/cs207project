@@ -83,7 +83,7 @@ class MyTest(unittest.TestCase):
         ast.walk(tabler)
         symtab = tabler.symbol_table
         self.assertListEqual(sorted(list(symtab.scopes())), sorted(['global', 'standardize']))
-        self.assertEqual(len(symtab['global']), 3)
+        self.assertEqual(len(symtab['global']), 11)
         self.assertEqual(len(symtab['standardize']), 4)
 
     def test_component(self):
