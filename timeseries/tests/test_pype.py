@@ -95,6 +95,42 @@ class MyTest(unittest.TestCase):
         def sillyfunc2(b):
             print(b)
         self.assertEqual(pype.is_component(sillyfunc2), False)
+    
+    def test_deadcodeelimination(self):
+        data = """
+        (import timeseries)
+
+        { component2
+          # sum of squares
+          (input x y)
+          (:= z (+ (* x x) (* y y)))
+          (output z)
+        }
+
+        { six
+          # Produces the number 6 through convoluted means
+          (input x y)
+          (:= a (+ x (* 2 y)))
+          (:= b (+ (/ y x) (* x x)))
+          (:= c 6)
+          (:= d (component2 x y)) 
+          (:= e (+ (* a a) (+ (* b b) d)))
+          (output c)
+        }
+        """
+        graph1 = 'digraph six {\n  "@N10" -> "@N11"\n  "@N11" -> "@N19"\n  "@N11" [ label = "c" ]\n  "@N1" [ label = "y" ]\n  "@N0" [ label = "x" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N19" [ color = "red" ]\n}\n'
+        graph2 = 'digraph component2 {\n  "@N2" -> "@N4"\n  "@N3" -> "@N4"\n  "@N5" -> "@N6"\n  "@N1" -> "@N3"\n  "@N1" -> "@N3"\n  "@N0" -> "@N2"\n  "@N0" -> "@N2"\n  "@N4" -> "@N5"\n  "@N1" [ label = "y" ]\n  "@N5" [ label = "z" ]\n  "@N0" [ label = "x" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N6" [ color = "red" ]\n}\n'
+        ast = pype.parser.parser.parse(data,pype.lexer.lexer)
+        q = pype.translate.SymbolTableVisitor()
+        ast.walk(q)
+        IR = ast.mod_walk(pype.translate.LoweringVisitor(q.symbol_table))
+        flowgraph = IR['six']
+        flowgraph2 = IR['component2']
+        eliminate = pype.optimize.DeadCodeElimination()
+        flowgraph2 = eliminate.visit(flowgraph2)
+        flowgraph = eliminate.visit(flowgraph)
+        self.assertEqual(flowgraph.dotfile(),graph1)
+        self.assertEqual(flowgraph2.dotfile(),graph2)
 
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
