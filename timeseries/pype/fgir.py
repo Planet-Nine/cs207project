@@ -62,7 +62,7 @@ class Flowgraph(object):
     return [i for (i,n) in self.nodes.items() if nodeid in self.nodes[i].inputs]
 
    
- def topological_sort(self):
+  def topological_sort(self):
     L = []
     color = { u : "white" for u in self.nodes.keys() }
     found_cycle = False
@@ -79,7 +79,7 @@ class Flowgraph(object):
     return L   
  
  
-def dfs_visit(self, u, color, L, found_cycle):
+  def dfs_visit(self, u, color, L, found_cycle):
     if found_cycle[0]:
         return
     color[u] = "gray"
