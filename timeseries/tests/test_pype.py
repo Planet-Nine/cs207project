@@ -120,6 +120,8 @@ class MyTest(unittest.TestCase):
         """
         graph1 = 'digraph six {\n  "@N10" -> "@N11"\n  "@N11" -> "@N19"\n  "@N1" [ label = "y" ]\n  "@N0" [ label = "x" ]\n  "@N11" [ label = "c" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N19" [ color = "red" ]\n}\n'
         graph2 = 'digraph component2 {\n  "@N2" -> "@N4"\n  "@N3" -> "@N4"\n  "@N1" -> "@N3"\n  "@N1" -> "@N3"\n  "@N0" -> "@N2"\n  "@N0" -> "@N2"\n  "@N4" -> "@N5"\n  "@N5" -> "@N6"\n  "@N5" [ label = "z" ]\n  "@N0" [ label = "x" ]\n  "@N1" [ label = "y" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N6" [ color = "red" ]\n}\n'
+        graph1 = sorted(graph1.split('\n'))
+        graph2 = sorted(graph2.split('\n'))
         ast = pype.parser.parser.parse(data,pype.lexer.lexer)
         q = pype.translate.SymbolTableVisitor()
         ast.walk(q)
@@ -129,8 +131,8 @@ class MyTest(unittest.TestCase):
         eliminate = pype.optimize.DeadCodeElimination()
         flowgraph2 = eliminate.visit(flowgraph2)
         flowgraph = eliminate.visit(flowgraph)
-        self.assertEqual(flowgraph.dotfile(),graph1)
-        self.assertEqual(flowgraph2.dotfile(),graph2)
+        self.assertListEqual(sorted(flowgraph.dotfile().split('\n')),graph1)
+        self.assertListEqual(sorted(flowgraph2.dotfile().split('\n')),graph2)
 
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
