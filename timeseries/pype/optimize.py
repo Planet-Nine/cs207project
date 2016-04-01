@@ -55,10 +55,42 @@ class DeadCodeElimination(FlowgraphOptimization):
   x could be removed:
     { component1 (input x y) (output y) }
   but imagine this component1 was in a file alongside this one:
-    { component2 (input a b) (:= c (component a b)) (output c) }
+    { component2 (input a b) (:= c (component1 a b)) (output c) }
   By removing x from component1, it could no longer accept two arguments. So in
   this instance, component1 will end up unmodified after DCE.'''
 
   def visit(self, flowgraph):
     # TODO: implement this
+    outputs = flowgraph.outputs
+    inputs = flowgraph.inputs
+    keep_vars = []
+    keep_ids = []
+    lose_vars = []
+    lose_ids = []
+    for inpt in inputs:
+        keep_ids.append(inpt)
+    for output in outputs:
+        keep_ids.append(output)
+        self.search(flowgraph,output,keep_ids)
+    for iden in keep_ids:
+        var = [key for key, value in flowgraph.variables.items() if value == iden]
+        if var:
+            var = var[0]
+        keep_vars.append(var)
+    for var in flowgraph.variables:
+        if var not in keep_vars:
+            lose_vars.append(var)
+    for var in lose_vars:
+        del flowgraph.variables[var]
+    for iden in flowgraph.nodes:
+        if iden not in keep_ids:
+            lose_ids.append(iden)
+    for iden in lose_ids:
+        del flowgraph.nodes[iden]
     return flowgraph
+  
+  def search(self,flowgraph,nodeid,keep_ids):
+    node = flowgraph.nodes[nodeid]
+    for nodeid2 in node.inputs:
+        keep_ids.append(nodeid2)
+        self.search(flowgraph,nodeid2,keep_ids)
