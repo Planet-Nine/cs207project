@@ -61,10 +61,40 @@ class Flowgraph(object):
   def post(self, nodeid):
     return [i for (i,n) in self.nodes.items() if nodeid in self.nodes[i].inputs]
 
-  def topological_sort(self):
-    # TODO : implement a topological sort
-    return [] # should return a list of node ids in sorted order
+   
+ def topological_sort(self):         # recursive dfs with 
+    L = []                      # additional list for order of nodes
+    color = { u : "white" for u in self.nodes.keys() }
+    found_cycle = False
+    for u in graph:
+        if color[u] == "white":
+            dfs_visit(self, u, color, L, found_cycle)
+        if found_cycle[0]:
+            break
+ 
+    if found_cycle:           # if there is a cycle, 
+        raise ValueError('The Flowgraph has loops')                 # then return an empty list  
+ 
+    L.reverse()                  # reverse the list
+    return L                     # L contains the topological sort
+ 
+ 
+def dfs_visit(self, u, color, L, found_cycle):
+    if found_cycle[0]:
+        return
+    color[u] = "gray"
+    for v in self.post(u):
+        if color[v] == "gray":
+            found_cycle = True
+            return
+        if color[v] == "white":
+            dfs_visit(self, v, color, L, found_cycle)
+    color[u] = "black"      # when we're done with u,
+    L.append(u)             # add u to list (reverse it later!)
 
+    
+    
+    
 class FGIR(object):
   def __init__(self):
     self.graphs = {} # { component_name:str => Flowgraph }
