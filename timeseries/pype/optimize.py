@@ -40,9 +40,22 @@ class AssignmentEllision(FlowgraphOptimization):
   their pre- and post-dependencies.'''
 
   def visit(self, flowgraph):
-    # TODO: implement this
+    nodes = flowgraph.nodes
+    nodestoremove = []
+    for n in nodes:
+      if nodes[n].type == FGNodeType.assignment:
+        inputs = nodes[n].inputs[0]
+        for varname, varnode in flowgraph.variables.items():
+          if varnode == n:
+            flowgraph.variables[varname] = inputs
+        for nf in nodes:
+          if (len(nodes[nf].inputs) > 0) and (n in nodes[nf].inputs):
+            nodes[nf].inputs.remove(n)
+            nodes[nf].inputs.append(inputs)
+        nodestoremove.append(n)
+    for n in nodestoremove:
+      del nodes[n]
     return flowgraph
-
 
 class DeadCodeElimination(FlowgraphOptimization):
   '''Eliminates unreachable expression statements.
