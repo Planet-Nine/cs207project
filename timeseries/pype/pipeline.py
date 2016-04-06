@@ -3,9 +3,12 @@ from .parser import parser
 from .ast import *
 from .semantic_analysis import CheckSingleAssignment, CheckSingleIOExpression, CheckUndefinedVariables
 from .translate import SymbolTableVisitor, LoweringVisitor
+from .optimize import *
+from .pcode import PCodeGenerator
 
 class Pipeline(object):
   def __init__(self, source):
+    self.pcodes = {}
     with open(source) as f:
       self.compile(f)
 
@@ -27,5 +30,12 @@ class Pipeline(object):
     # Optimization
     ir.flowgraph_pass( AssignmentEllision() )
     ir.flowgraph_pass( DeadCodeElimination() )
+    ir.topological_flowgraph_pass( InlineComponents() )
 
-    return ir
+    # PCode Generation
+    pcodegen = PCodeGenerator()
+    ir.flowgraph_pass( pcodegen )
+    self.pcodes = pcodegen.pcodes
+
+  def __getitem__(self, component_name):
+    return self.pcodes[component_name]
