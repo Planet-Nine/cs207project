@@ -18,7 +18,7 @@ class PCodeOp(object):
     # TODO
     # hint: look at asyncio.gather
     # hint: the same return value of the function is put in every output queue
-    pass
+    out_qs = [out_qs[i].put(j) for i,j in enumerate(func(*[q.get() for q in in_qs]))]
 
   @staticmethod
   async def forward(in_qs, out_qs):
@@ -30,6 +30,7 @@ class PCodeOp(object):
   async def libraryfunction(in_qs, out_qs, function_ref):
     def f(*inputs):
       # TODO
+      return function_ref.__get__(inputs[0])(*inputs[1:])
     await PCodeOp._node(in_qs, out_qs, f)
 
   @staticmethod
@@ -135,4 +136,3 @@ class PCodeGenerator(FlowgraphOptimization):
 
     self.pcodes[flowgraph.name] = pc
     self.queues = qs
-Status API Training Shop Blog About
