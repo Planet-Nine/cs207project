@@ -118,10 +118,6 @@ class MyTest(unittest.TestCase):
           (output c)
         }
         """
-        graph1 = 'digraph six {\n  "@N10" -> "@N11"\n  "@N11" -> "@N19"\n  "@N1" [ label = "y" ]\n  "@N0" [ label = "x" ]\n  "@N11" [ label = "c" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N19" [ color = "red" ]\n}\n'
-        graph2 = 'digraph component2 {\n  "@N2" -> "@N4"\n  "@N3" -> "@N4"\n  "@N1" -> "@N3"\n  "@N1" -> "@N3"\n  "@N0" -> "@N2"\n  "@N0" -> "@N2"\n  "@N4" -> "@N5"\n  "@N5" -> "@N6"\n  "@N5" [ label = "z" ]\n  "@N0" [ label = "x" ]\n  "@N1" [ label = "y" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N6" [ color = "red" ]\n}\n'
-        graph1 = sorted(graph1.split('\n'))
-        graph2 = sorted(graph2.split('\n'))
         ast = pype.parser.parser.parse(data,pype.lexer.lexer)
         q = pype.translate.SymbolTableVisitor()
         ast.walk(q)
@@ -129,10 +125,33 @@ class MyTest(unittest.TestCase):
         flowgraph = IR['six']
         flowgraph2 = IR['component2']
         eliminate = pype.optimize.DeadCodeElimination()
-        flowgraph2 = eliminate.visit(flowgraph2)
         flowgraph = eliminate.visit(flowgraph)
-        self.assertListEqual(sorted(flowgraph.dotfile().split('\n')),graph1)
-        self.assertListEqual(sorted(flowgraph2.dotfile().split('\n')),graph2)
+        flowgraph2 = eliminate.visit(flowgraph2)
+
+    def test_inline(self):
+        data = """
+        (import timeseries)
+        { mul (input x y) (:= z (* x y)) (output z) }
+        { dist (input a b) (:= c (+ (mul a b) (mul b a))) (output c) }
+        """
+        graph1 = 'digraph dist {\n  "@N2" -> "@N4"\n  "@N3" -> "@N4"\n  "@N1" -> "@N3"\n  "@N0" -> "@N3"\n  "@N4" -> "@N5"\n  "@N5" -> "@N6"\n  "@N0" -> "@N2"\n  "@N1" -> "@N2"\n  "@N0" [ label = "a" ]\n  "@N5" [ label = "c" ]\n  "@N1" [ label = "b" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N6" [ color = "red" ]\n}\n'
+        graph2 = 'digraph dist {\n  "@N1" -> "@N8"\n  "@N14" -> "@N12"\n  "@N1" -> "@N16"\n  "@N0" -> "@N13"\n  "@N5" -> "@N6"\n  "@N8" -> "@N10"\n  "@N11" -> "@N10"\n  "@N12" -> "@N4"\n  "@N7" -> "@N4"\n  "@N15" -> "@N14"\n  "@N13" -> "@N15"\n  "@N16" -> "@N15"\n  "@N9" -> "@N7"\n  "@N4" -> "@N5"\n  "@N0" -> "@N11"\n  "@N10" -> "@N9"\n  "@N0" [ label = "a" ]\n  "@N5" [ label = "c" ]\n  "@N1" [ label = "b" ]\n  "@N0" [ color = "green" ]\n  "@N1" [ color = "green" ]\n  "@N6" [ color = "red" ]\n}\n'
+        graph1 = sorted(graph1.split('\n'))
+        graph2 = sorted(graph2.split('\n'))
+        ast = pype.parser.parser.parse(data,pype.lexer.lexer)
+        q = pype.translate.SymbolTableVisitor()
+        ast.walk(q)
+        IR = ast.mod_walk(pype.translate.LoweringVisitor(q.symbol_table))
+        flowgraph = IR['mul']
+        flowgraph2 = IR['dist']
+        eliminate = pype.optimize.InlineComponents()
+        flowgraph = eliminate.visit(flowgraph)
+        flowgraph2 = eliminate.visit(flowgraph2)
+        self.assertEqual(len(flowgraph2.inputs),2)
+        self.assertEqual(len(flowgraph2.outputs),1)
+        for nid in flowgraph2.nodes.keys():
+            self.assertNotEqual(flowgraph2.nodes[nid].ref,'mul')
+        
 
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
