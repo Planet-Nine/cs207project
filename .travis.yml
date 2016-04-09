@@ -9,7 +9,6 @@ before_install:
     - pip install pytest pytest-cov
     - pip install ply
     - pip install coveralls
-    - pip install sphinx
     - pip install timeseries
 script:
     - cd timeseries
