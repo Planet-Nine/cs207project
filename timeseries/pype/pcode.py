@@ -98,10 +98,11 @@ class PCodeGenerator(FlowgraphOptimization):
     qs = {} # { (src,dst)=>asyncio.Queue(), ... }
 
     # Populate qs by iterating over inputs of every node
-    # TODO
+    for (nodeid, node) in flowgraph.nodes.items():
+      for src in node.inputs:
+        qs[src, nodeid] = asyncio.Queue()
     # hint: destination nodes should be in flowgraph nodes
     # hint: sources are their inputs
-    pass
 
     # Add an extra input queue for each component input
     component_inputs = []
@@ -111,7 +112,7 @@ class PCodeGenerator(FlowgraphOptimization):
       qs[(None,dst)] = q
       qs[(None,dst)]._endpoints = (None,dst)
     pc.inputs = component_inputs
-
+ 
     # Now create all the coroutines from the nodes.
     for (node_id,node) in flowgraph.nodes.items():
       node_in_qs = [qs[src_id,node_id] for src_id in node.inputs]
