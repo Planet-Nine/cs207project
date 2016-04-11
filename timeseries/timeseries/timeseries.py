@@ -191,7 +191,7 @@ class TimeSeries():
         self.data=np.array(data)
         self.index=0
         self.len=len(time)
-        
+    @pype.component
     def __len__(self):
         return len(self.data)
     def __getitem__(self, time):
@@ -251,7 +251,7 @@ class TimeSeries():
     def median(self):
         if self.len == 0: raise ValueError("Cannot perform operation on empty list")
         return np.median(self.data)
-    
+    @pype.component
     def _check_times_helper(self,rhs):
         if not self.times() == rhs.times():
             raise ValueError(str(self)+' and '+str(rhs)+' must have the same times')
@@ -284,7 +284,7 @@ class TimeSeries():
                 self._check_times_helper(rhs)
                 pairs = zip(self, rhs)
                 return TimeSeries(self.time,self.data*rhs.data)
-        except TypeError:
+        except TypeError: 
             raise NotImplemented
     @pype.component    
     def __rmul__(self, other): # other + self delegates to __mul__

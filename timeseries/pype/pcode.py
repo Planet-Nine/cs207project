@@ -18,7 +18,14 @@ class PCodeOp(object):
     # TODO
     # hint: look at asyncio.gather
     # hint: the same return value of the function is put in every output queue
-    out_qs = [out_qs[i].put(j) for i,j in enumerate(func(*[q.get() for q in in_qs]))]
+    #out_qs = [out_qs[i].put(j) for i,j in enumerate(func(*[q.get() for q in in_qs]))]
+    inputs = []
+    for i in range(0,len(in_qs)):
+      nextin = await in_qs[i].get()
+      inputs.append(nextin)
+    retval = func(*inputs)
+    for i in range(0,len(out_qs)):
+      await out_qs[i].put(retval)
 
   @staticmethod
   async def forward(in_qs, out_qs):
