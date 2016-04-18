@@ -4,7 +4,7 @@ from functools import reduce
 
 
 class DictDB:
-    "Database implementation in a dict"
+    #Database implementation in a dict"
     def __init__(self, schema):
         "initializes database with indexed and schema"
         self.indexes = {}
@@ -17,7 +17,7 @@ class DictDB:
                 self.indexes[s] = defaultdict(set)
 
     def insert_ts(self, pk, ts):
-        "given a pk and a timeseries, insert them"
+        #given a pk and a timeseries, insert them"
         if pk not in self.rows:
             self.rows[pk] = {'pk': pk}
         else:
@@ -26,7 +26,7 @@ class DictDB:
         self.update_indices(pk)
 
     def upsert_meta(self, pk, meta):
-        "implement upserting field values, as long as the fields are in the schema."
+        #implement upserting field values, as long as the fields are in the schema."
         if pk not in self.rows:
             self.rows[pk] = {'pk': pk}
         for field in meta:
