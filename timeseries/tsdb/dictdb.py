@@ -27,7 +27,13 @@ class DictDB:
 
     def upsert_meta(self, pk, meta):
         "implement upserting field values, as long as the fields are in the schema."
-        # your code here
+        if pk not in self.rows:
+            self.rows[pk] = {'pk': pk}
+        for field in meta:
+            if field not in self.schema:
+                raise ValueError('Field not supported by schema')
+            else:
+                self.rows[pk][field] = meta[field]
         self.update_indices(pk)
 
     def index_bulk(self, pks=[]):
@@ -47,3 +53,18 @@ class DictDB:
     def select(self, meta):
         #implement select, AND'ing over the filters in the md metadata dict
         #remember that each item in the dictionary looks like key==value
+        # Intended return value is unclear, currently returns a set of primary keys
+        first = True
+        for field in meta:
+            if field not in self.schema:
+                raise ValueError('Field not supported by schema')
+            else:
+                matchind1 = self.indexes[field][meta[field]]
+                if first: 
+                    pks = matchind1
+                    first = False
+                else:
+                    pks = pks.intersection(matchind1)
+
+        return pks
+            
