@@ -8,7 +8,7 @@ def serialize(json_obj):
 
     Includes a fixed-width length field to simplify reconstruction on the other
     end of the wire.'''
-    #your code here. Returns the bytes on the wire
+    # your code here
 
 
 class Deserializer(object):
