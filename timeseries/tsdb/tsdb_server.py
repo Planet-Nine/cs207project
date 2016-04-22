@@ -82,10 +82,12 @@ class TSDBProtocol(asyncio.Protocol):
         self.deserializer.append(data)
         if self.deserializer.ready():
             msg = self.deserializer.deserialize()
+            # print('S>message is:',msg)
             status = TSDBStatus.OK  # until proven otherwise.
             response = TSDBOp_Return(status, None)  # until proven otherwise.
             try:
                 op = TSDBOp.from_json(msg)
+                # print (op)
             except TypeError as e:
                 response = TSDBOp_Return(TSDBStatus.INVALID_OPERATION, None)
             if status is TSDBStatus.OK:
@@ -101,7 +103,8 @@ class TSDBProtocol(asyncio.Protocol):
                     response = self._remove_trigger(op)
                 else:
                     response = TSDBOp_Return(TSDBStatus.UNKNOWN_ERROR, op['op'])
-
+            print ('S>writing')
+            # print(response)
             self.conn.write(serialize(response.to_json()))
             self.conn.close()
 

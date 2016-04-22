@@ -39,7 +39,7 @@ class TSDBClient(object):
 
     async def _send_coro(self, msg, loop):
         #your code here
-        prot = await loop.create_connection(lambda: TSDBClientProtocol(message, loop),
+        prot = await loop.create_connection(lambda: TSDBClientProtocol(msg, loop),
                               '127.0.0.1', self.port)
         status = prot[1].status
         payload = prot[1].payload
@@ -53,20 +53,29 @@ class TSDBClient(object):
         
 class TSDBClientProtocol(asyncio.Protocol):
     def __init__(self,message,loop):
-        self.msg=msg
+        self.deserializer=Deserializer()
+        self.msg=message
         self.loop=loop
+        self.status=None
+        self.payload=None
     def connection_made(self,conn):
-        self.conn=con
+        self.conn=conn
         print("C>connection made, writing")
-        self.conn.write(serialize(msg))
-    def data_received(self,response)
-        self.status = deserialize(response)['status']
-        print ("C> status:", status)
-        self.payload = deserialize(response)['payload']
-        print ("C> payload:", payload)
-        self.conn.close()
-    def connection_lost(self,transport):
-        print("C> connection lost")
-        self.loop.stop()
+        self.conn.write(serialize(self.msg))
+        # self.conn.close()
+    def data_received(self,response):
+        # print('C>received data!')
+        self.deserializer.append(response)
+        if self.deserializer.ready():
+            msg=self.deserializer.deserialize()
+            print('C>received message:',msg)
+            self.status = TSDBStatus(msg['status'])
+            print ("C> status:", self.status)
+            self.payload = msg['payload']
+            print ("C> payload:", self.payload)
+        # self.conn.close()
+    # def connection_lost(self,transport):
+        # print("C> connection lost")
+        # self.loop.stop()
     
     
