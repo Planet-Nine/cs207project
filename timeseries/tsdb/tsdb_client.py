@@ -39,6 +39,10 @@ class TSDBClient(object):
 
     async def _send_coro(self, msg, loop):
         #your code here
+        prot = await loop.create_connection(lambda: TSDBClientProtocol(message, loop),
+                              '127.0.0.1', self.port)
+        status = prot[1].status
+        payload = prot[1].payload
         return status, payload
 
     def _send(self, msg):
@@ -46,3 +50,23 @@ class TSDBClient(object):
         coro = asyncio.ensure_future(self._send_coro(msg, loop))
         loop.run_until_complete(coro)
         return coro.result()
+        
+class TSDBClientProtocol(asyncio.Protocol):
+    def __init__(self,message,loop):
+        self.msg=msg
+        self.loop=loop
+    def connection_made(self,conn):
+        self.conn=con
+        print("C>connection made, writing")
+        self.conn.write(serialize(msg))
+    def data_received(self,response)
+        self.status = deserialize(response)['status']
+        print ("C> status:", status)
+        self.payload = deserialize(response)['payload']
+        print ("C> payload:", payload)
+        self.conn.close()
+    def connection_lost(self,transport):
+        print("C> connection lost")
+        self.loop.stop()
+    
+    
