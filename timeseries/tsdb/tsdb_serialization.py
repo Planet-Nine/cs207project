@@ -5,7 +5,6 @@ LENGTH_FIELD_LENGTH = 4
 
 def serialize(json_obj):
     '''Turn a JSON object into bytes suitable for writing out to the network.
-
     Includes a fixed-width length field to simplify reconstruction on the other
     end of the wire.'''
     #your code here. Returns the bytes on the wire
@@ -20,7 +19,6 @@ def serialize(json_obj):
 
 class Deserializer(object):
     '''A buffering and bytes-to-json engine.
-
     Data can be received in arbitrary chunks of bytes, and we need a way to
     reconstruct variable-length JSON objects from that interface. This class
     buffers up bytes until it can detect that it has a full JSON object (via
