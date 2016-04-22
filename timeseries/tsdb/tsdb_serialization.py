@@ -9,7 +9,14 @@ def serialize(json_obj):
     Includes a fixed-width length field to simplify reconstruction on the other
     end of the wire.'''
     #your code here. Returns the bytes on the wire
-
+    try:
+        obj = json.dumps(json_obj)
+        b = obj.encode()
+        encoded = (len(b)+LENGTH_FIELD_LENGTH).to_bytes(LENGTH_FIELD_LENGTH,byteorder='little') + b
+        return encoded
+    except:
+        print('Invalid JSON object received:\n'+str(json_obj))
+        return None
 
 class Deserializer(object):
     '''A buffering and bytes-to-json engine.
