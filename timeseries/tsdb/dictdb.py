@@ -36,6 +36,10 @@ class DictDB:
         else:
             raise ValueError('Duplicate primary key found during insert')
         self.rows[pk]['ts'] = ts
+        if 'mean' in self.schema:
+            self.rows[pk]['mean'] = ts.mean()
+        if 'std' in self.schema:
+            self.rows[pk]['std'] = ts.std()
         self.update_indices(pk)
 
     def upsert_meta(self, pk, meta):
