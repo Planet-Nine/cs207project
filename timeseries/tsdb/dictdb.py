@@ -88,6 +88,14 @@ class DictDB:
         #which will give you the top 10 in the current sort order.
         #your code here
 
+        sort = 0
+        limit = None
+        if len(additional) > 0:
+            if 'sort_by' in additional and 'order' in self.schema and self.schema['order']['index'] is not None:
+                if additional['sort_by'] == '-order': sort = -1
+                if additional['sort_by'] == '+order': sort = 1
+            if len(additional) > 1 and 'limit' in additional:
+                limit = int(additional['limit'])
 
         # Find primary keys for timeseries which match metadata
         # If no metadata provided, return all rows
@@ -122,9 +130,15 @@ class DictDB:
 
         # Retrieve appropriate fields
         matchfields = []
+        orderfield = []
         # Return only pks
         if fields is None:
-            for pk in pks: matchfields.append({})
+            for pk in pks: 
+                matchfields.append({})
+                if 'order' in self.rows[pk] and sort != 0:         
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))    # This ensures reasonable behavior
         # Return all metadata
         elif len(fields) == 0:   
             for pk in pks:
@@ -135,12 +149,28 @@ class DictDB:
                     if f != 'ts':
                         pkfields[f] = pkrow[f]
                 matchfields.append(pkfields)
+                if 'order' in self.rows[pk] and sort != 0:         
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))    # This ensures reasonable behavior if order is not defined for that pk
+        # Return specific metadata
         else:
             for pk in pks:
                 pkfields = {}
                 pkrow = self.rows[pk]
                 for f in fields:
-                    pkfields[f] = pkrow[f]
+                    if f in pkrow:
+                        pkfields[f] = pkrow[f]
                 matchfields.append(pkfields)
+                if 'order' in self.rows[pk] and sort != 0:
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))
 
-        return pks, matchfields
+        if sort != 0:
+            pks = [y for x,y in sorted(zip(orderfield, pks))]
+            matchfields = [y for x,y in sorted(zip(orderfield, matchfields))]
+        if limit is None:
+            return pks, matchfields
+        else:
+            return pks[:limit], matchfields[:limit]
