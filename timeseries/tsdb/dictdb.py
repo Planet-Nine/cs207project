@@ -3,9 +3,6 @@ from operator import and_
 from functools import reduce
 import operator
 
-# UPDATE TO THIS VERSION FOR APRIL 20 LAB
-
-# this dictionary will help you in writing a generic select operation
 OPMAP = {
     '<': operator.lt,
     '>': operator.le,
@@ -14,6 +11,19 @@ OPMAP = {
     '<=': operator.le,
     '>=': operator.ge
 }
+
+
+def metafiltered(d, schema, fieldswanted):
+    d2 = {}
+    if len(fieldswanted) == 0:
+        keys = [k for k in d.keys() if k != 'ts']
+    else:
+        keys = [k for k in d.keys() if k in fieldswanted]
+    for k in keys:
+        if k in schema:
+            d2[k] = schema[k]['convert'](d[k])
+    return d2
+
 
 class DictDB:
     "Database implementation in a dict"
@@ -36,10 +46,6 @@ class DictDB:
         else:
             raise ValueError('Duplicate primary key found during insert')
         self.rows[pk]['ts'] = ts
-        if 'mean' in self.schema:
-            self.rows[pk]['mean'] = ts.mean()
-        if 'std' in self.schema:
-            self.rows[pk]['std'] = ts.std()
         self.update_indices(pk)
 
     def upsert_meta(self, pk, meta):
@@ -66,7 +72,23 @@ class DictDB:
                 idx = self.indexes[field]
                 idx[v].add(pk)
 
-    def select(self, meta, fields):
+    def select(self, meta, fields, additional={}):
+        # if fields is None: return only pks
+        # like so [pk1,pk2],[{},{}]
+        # if fields is [], this means all fields
+        #except for the 'ts' field. Looks like
+        #['pk1',...],[{'f1':v1, 'f2':v2},...]
+        # if the names of fields are given in the list, include only those fields. `ts` ia an
+        #acceptable field and can be used to just return time series.
+        #see tsdb_server to see how this return
+        #value is used
+        #additional is a dictionary. It has two possible keys:
+        #(a){'sort_by':'-order'} or {'sort_by':'+order'} where order
+        #must be in the schema AND have an index. (b) limit: 'limit':10
+        #which will give you the top 10 in the current sort order.
+        #your code here
+
+
         # Find primary keys for timeseries which match metadata
         # If no metadata provided, return all rows
         if len(meta) == 0:
