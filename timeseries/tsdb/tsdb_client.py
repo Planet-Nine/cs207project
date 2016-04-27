@@ -19,10 +19,16 @@ class TSDBClient(object):
         print("C> upsert msg", msg)
         self._send(msg)
 
-    def select(self, metadata_dict={}, fields=None):
+    def select(self, metadata_dict={}, fields=None, additional=None):
         #your code here
-        msg = TSDBOp_Select(metadata_dict, fields).to_json()
+        msg = TSDBOp_Select(metadata_dict, fields,additional).to_json()
         print("C> select msg", msg)
+        self._send(msg)
+        
+    def augmented_select(self, proc, target, arg=None, metadata_dict={}, additional=None):
+        #your code here
+        msg = TSDBOp_AugmentedSelect(proc, target, arg, metadata_dict, additional).to_json()
+        print("C> aug select msg", msg)
         self._send(msg)
 
     def add_trigger(self, proc, onwhat, target, arg):
