@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 LENGTH_FIELD_LENGTH = 4
 
@@ -7,7 +8,6 @@ def serialize(json_obj):
     '''Turn a JSON object into bytes suitable for writing out to the network.
     Includes a fixed-width length field to simplify reconstruction on the other
     end of the wire.'''
-    #your code here. Returns the bytes on the wire
     try:
         obj = json.dumps(json_obj)
         b = obj.encode()
@@ -49,7 +49,9 @@ class Deserializer(object):
         # There may be more data in the buffer already, so preserve it
         self._maybe_set_length()
         try:
-            obj = json.loads(json_str)
+            #Note how now everything is assumed to be an OrderedDict
+            obj = json.loads(json_str, object_pairs_hook=OrderedDict)
+            #print("OBJ", obj)
             return obj
         except json.JSONDecodeError:
             print('Invalid JSON object received:\n'+str(json_str))

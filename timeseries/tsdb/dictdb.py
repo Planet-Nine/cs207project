@@ -3,9 +3,6 @@ from operator import and_
 from functools import reduce
 import operator
 
-# UPDATE TO THIS VERSION FOR APRIL 20 LAB
-
-# this dictionary will help you in writing a generic select operation
 OPMAP = {
     '<': operator.lt,
     '>': operator.le,
@@ -14,6 +11,19 @@ OPMAP = {
     '<=': operator.le,
     '>=': operator.ge
 }
+
+
+def metafiltered(d, schema, fieldswanted):
+    d2 = {}
+    if len(fieldswanted) == 0:
+        keys = [k for k in d.keys() if k != 'ts']
+    else:
+        keys = [k for k in d.keys() if k in fieldswanted]
+    for k in keys:
+        if k in schema:
+            d2[k] = schema[k]['convert'](d[k])
+    return d2
+
 
 class DictDB:
     "Database implementation in a dict"
@@ -62,7 +72,31 @@ class DictDB:
                 idx = self.indexes[field]
                 idx[v].add(pk)
 
-    def select(self, meta, fields):
+    def select(self, meta, fields, additional={}):
+        # if fields is None: return only pks
+        # like so [pk1,pk2],[{},{}]
+        # if fields is [], this means all fields
+        #except for the 'ts' field. Looks like
+        #['pk1',...],[{'f1':v1, 'f2':v2},...]
+        # if the names of fields are given in the list, include only those fields. `ts` ia an
+        #acceptable field and can be used to just return time series.
+        #see tsdb_server to see how this return
+        #value is used
+        #additional is a dictionary. It has two possible keys:
+        #(a){'sort_by':'-order'} or {'sort_by':'+order'} where order
+        #must be in the schema AND have an index. (b) limit: 'limit':10
+        #which will give you the top 10 in the current sort order.
+        #your code here
+
+        sort = 0
+        limit = None
+        if len(additional) > 0:
+            if 'sort_by' in additional and 'order' in self.schema and self.schema['order']['index'] is not None:
+                if additional['sort_by'] == '-order': sort = -1
+                if additional['sort_by'] == '+order': sort = 1
+            if len(additional) > 1 and 'limit' in additional:
+                limit = int(additional['limit'])
+
         # Find primary keys for timeseries which match metadata
         # If no metadata provided, return all rows
         if len(meta) == 0:
@@ -96,9 +130,15 @@ class DictDB:
 
         # Retrieve appropriate fields
         matchfields = []
+        orderfield = []
         # Return only pks
         if fields is None:
-            for pk in pks: matchfields.append({})
+            for pk in pks: 
+                matchfields.append({})
+                if 'order' in self.rows[pk] and sort != 0:         
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))    # This ensures reasonable behavior
         # Return all metadata
         elif len(fields) == 0:   
             for pk in pks:
@@ -109,12 +149,28 @@ class DictDB:
                     if f != 'ts':
                         pkfields[f] = pkrow[f]
                 matchfields.append(pkfields)
+                if 'order' in self.rows[pk] and sort != 0:         
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))    # This ensures reasonable behavior if order is not defined for that pk
+        # Return specific metadata
         else:
             for pk in pks:
                 pkfields = {}
                 pkrow = self.rows[pk]
                 for f in fields:
-                    pkfields[f] = pkrow[f]
+                    if f in pkrow:
+                        pkfields[f] = pkrow[f]
                 matchfields.append(pkfields)
+                if 'order' in self.rows[pk] and sort != 0:
+                    orderfield.append(self.rows[pk]['order']*sort)
+                else:
+                    orderfield.append(float('inf'))
 
-        return pks, matchfields
+        if sort != 0:
+            pks = [y for x,y in sorted(zip(orderfield, pks))]
+            matchfields = [y for x,y in sorted(zip(orderfield, matchfields))]
+        if limit is None:
+            return pks, matchfields
+        else:
+            return pks[:limit], matchfields[:limit]

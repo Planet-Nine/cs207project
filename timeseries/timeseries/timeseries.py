@@ -236,6 +236,12 @@ class TimeSeries():
     def interpolate(self,newtime):
         newvalue=np.interp(newtime,self.time,self.data)
         return TimeSeries(newtime,newvalue)
+    def to_json(self):
+        # json_dict={}
+        # json_dict['time']=self.time.tolist()
+        # json_dict['data']=self.data.tolist()
+        json_dict=(self.time.tolist(),self.data.tolist())
+        return json_dict
     @property
     def lazy(self):
         lazy_fun = LazyOperation(f,self)
