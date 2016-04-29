@@ -8,14 +8,14 @@ def serialize(json_obj):
     '''Turn a JSON object into bytes suitable for writing out to the network.
     Includes a fixed-width length field to simplify reconstruction on the other
     end of the wire.'''
-    try:
+    while True:
         obj = json.dumps(json_obj)
         b = obj.encode()
         encoded = (len(b)+LENGTH_FIELD_LENGTH).to_bytes(LENGTH_FIELD_LENGTH,byteorder='little') + b
         return encoded
-    except:
-        print('Invalid JSON object received:\n'+str(json_obj))
-        return None
+    # except:
+        # print('Invalid JSON object received:\n'+str(json_obj))
+        # return None
 
 class Deserializer(object):
     '''A buffering and bytes-to-json engine.
