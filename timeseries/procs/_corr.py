@@ -22,7 +22,7 @@ def stand(x, m, s):
 def ccor(ts1, ts2):
     "given two standardized time series, compute their cross-correlation using FFT"
     #your code here
-    return nfft.fft(nfft.ifft(ts1) * np.conj(nfft.ifft(ts2)))
+    return nfft.fft(nfft.ifft(ts1.data) * np.conj(nfft.ifft(ts2.data)))
 
 
 def max_corr_at_phase(ts1, ts2):
