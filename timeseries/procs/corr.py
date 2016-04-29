@@ -19,7 +19,7 @@ def proc_main(pk, row, arg):
     # compute a distance from it.
     #The distance is given by np.sqrt(K(x,x) + K(y,y) - 2*K(x,y))
     #since we are normalized the autocorrs are 1
-    kerndist = np.sqrt(2*(1-kerncorr))
+    kerndist = np.sqrt(2*(1-kerncorr)).real
     return [kerndist]
 
 #the function is wrapped in a coroutine for triggers
