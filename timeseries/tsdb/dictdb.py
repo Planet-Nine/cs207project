@@ -72,7 +72,7 @@ class DictDB:
                 idx = self.indexes[field]
                 idx[v].add(pk)
 
-    def select(self, meta, fields, additional={}):
+    def select(self, meta, fields, additional=None):
         # if fields is None: return only pks
         # like so [pk1,pk2],[{},{}]
         # if fields is [], this means all fields
@@ -90,7 +90,7 @@ class DictDB:
 
         sort = 0
         limit = None
-        if len(additional) > 0:
+        if additional is not None:
             if 'sort_by' in additional and 'order' in self.schema and self.schema['order']['index'] is not None:
                 if additional['sort_by'] == '-order': sort = -1
                 if additional['sort_by'] == '+order': sort = 1
