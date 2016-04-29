@@ -63,16 +63,16 @@ async def tcp_echo_client(message,loop,port,host='127.0.0.1'):
     status= None
     payload=None
     data = await reader.read(8192)
+    print('C>received message')
     deserializer=Deserializer()
     deserializer.append(data)
     if deserializer.ready():
         msg=deserializer.deserialize()
-        print('C>received message:',msg)
         status = TSDBStatus(msg['status'])
         print ("C> status:", status)
         payload = msg['payload']
         print ("C> payload:", payload)
-        return status, payload
+    return status, payload
 
     print('Close the socket')
     writer.close()
