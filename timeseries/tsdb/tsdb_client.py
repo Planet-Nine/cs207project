@@ -29,7 +29,7 @@ class TSDBClient(object):
         #your code here
         msg = TSDBOp_AugmentedSelect(proc, target, arg, metadata_dict, additional).to_json()
         print("C> aug select msg", msg)
-        self._send(msg)
+        return self._send(msg)
 
     def add_trigger(self, proc, onwhat, target, arg):
         # your code here
