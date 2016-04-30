@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from operator import and_
 from functools import reduce
 import operator
@@ -106,7 +106,7 @@ class DictDB:
             first = True
             for field in meta:
                 # Define operator  (For now assuming just one per field)
-                if type(meta[field]) == dict:
+                if type(meta[field]) == dict or type(meta[field]) == OrderedDict:
                     for opkey in meta[field]:
                         op = OPMAP[opkey]
                         compval = meta[field][opkey]
@@ -168,8 +168,13 @@ class DictDB:
                     orderfield.append(float('inf'))
 
         if sort != 0:
+            sortind = [y for (x,y) in sorted(zip(orderfield, range(len(orderfield))))]
+#            pks = [pks[i] for i in sortind]
+            matchfields = [matchfields[i] for i in sortind]
             pks = [y for x,y in sorted(zip(orderfield, pks))]
-            matchfields = [y for x,y in sorted(zip(orderfield, matchfields))]
+#            print(orderfield)
+#            print(matchfields)
+#            matchfields = [y for (x,y) in sorted(zip(orderfield, matchfields))]
         if limit is None:
             return pks, matchfields
         else:
