@@ -2,7 +2,6 @@
 from tsdb import TSDBClient
 import timeseries as ts
 import numpy as np
-from procs._corr import stand, kernel_corr
 
 from scipy.stats import norm
 
@@ -106,8 +105,6 @@ def main():
     # Step 1: in the vpdist key, get  distances from query to vantage points
     # this is an augmented select
     _, results = client.augmented_select('corr', ['distance'], arg=query, metadata_dict={'vp': True})
-    for k in results:
-        print(k, results[k])
     
     #1b: choose the lowest distance vantage point
     # you can do this in local code
@@ -122,17 +119,15 @@ def main():
     #closest_vp 
     # Step 2: find all time series within 2*d(query, nearest_vp_to_query)
     #this is an augmented select to the same proc in correlation
-    _, results2 = client.augmented_select('corr', ['distance'], arg=tsdict[key_vp], metadata_dict={'d_vp-{}'.format(ind): {'<=': 2*dist_vp}})
+    _, results2 = client.augmented_select('corr', ['distance'], arg=query, metadata_dict={'d_vp-{}'.format(ind): {'<=': 2*dist_vp}})
             
     #{"d_vp-{}".format(ind): {'<=': 2*dist_vp}}
     #2b: find the smallest distance amongst this ( or k smallest)
     least = 2
-    for k in results2:
-        kerncorr = kernel_corr(stand(query, query.mean(), query.std()), stand(tsdict[k], tsdict[k].mean(), tsdict[k].std()), 5)
-        kerndist = np.sqrt(2*(1-kerncorr)).real
-        if kerndist < least:
-            least = kerndist
-            nearestwanted = k
+    for key in results2:
+        if results2[key]['distance'] < least:
+            least = results2[key]['distance']
+            nearestwanted = key
     #you can do this in local code
     #your code here ends
     # plot the timeseries to see visually how we did.
