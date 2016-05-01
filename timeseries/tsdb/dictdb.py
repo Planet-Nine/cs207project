@@ -49,13 +49,13 @@ class DictDB:
         self.update_indices(pk)
 
     def upsert_meta(self, pk, meta):
+        # Test that metadata has correct structure
+        if isinstance(meta, dict) == False:
+            raise ValueError('Metadata should be in the form of a dictionary')
         if pk not in self.rows:
-            self.rows[pk] = {'pk': pk}
+            raise ValueError('Timeseries should be added prior to metadata')
         for field in meta:
-            if field not in self.schema:
-                raise ValueError('Field not supported by schema')
-            else:
-                self.rows[pk][field] = meta[field]
+            self.rows[pk][field] = meta[field]
         self.update_indices(pk)
 
     def index_bulk(self, pks=[]):
@@ -88,8 +88,16 @@ class DictDB:
         #which will give you the top 10 in the current sort order.
         #your code here
 
+        # Enforce appropriate input
+        if isinstance(meta, dict) == False:
+            raise ValueError('Metadata should be in the form of a dictionary')
+        if fields is not None and isinstance(fields, list) == False:
+            raise ValueError('Fields should either be in list form or None')
+
+
         sort = 0
         limit = None
+        # Allows nonsense input into additional, just ignores it
         if additional is not None:
             if 'sort_by' in additional and 'order' in self.schema and self.schema['order']['index'] is not None:
                 if additional['sort_by'] == '-order': sort = -1
@@ -100,7 +108,7 @@ class DictDB:
         # Find primary keys for timeseries which match metadata
         # If no metadata provided, return all rows
         if len(meta) == 0:
-            pks = self.rows.keys()
+            pks = list(self.rows.keys())
         # Otherwise, search for matching rows
         else:
             first = True
