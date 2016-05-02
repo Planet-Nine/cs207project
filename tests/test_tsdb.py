@@ -1,6 +1,11 @@
 import unittest
+import asyncio
 from timeseries import TimeSeries
 from tsdb.dictdb import DictDB
+from tsdb.tsdb_client import *
+from tsdb.tsdb_server import TSDBServer
+
+
 import numpy as np
 
 identity = lambda x: x
@@ -74,6 +79,120 @@ class MyTest(unittest.TestCase):
         self.assertEqual(pks, ['two', 'one', 'negone'])
         pks, fields = db.select(meta={}, fields=None, additional={'sort_by':'-order', 'limit':2})
         self.assertEqual(pks, ['two', 'one'])
+        
+    async def test_insert_ts(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        def tests(self):
+            client = TSDBClient()
+            t1 = TimeSeries([0,1,2],[4,5,6])
+            client.insert_ts('t1',t1)
+            with self.assertRaises(TypeError):
+                client.insert_ts(t1)
+            with self.assertRaises(ValueError):
+                client.insert_ts('t1',t1)
+        
+        await server.run()
+        tests(self)
+        
+ 
+    async def test_upsert_meta(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        await server.run()
+        client = TSDBClient()
+        t1 = TimeSeries([0,1,2],[4,5,6])
+        client.insert_ts('t1',t1)
+        client.upsert_meta('t1',{'order':2})
+        with self.assertRaises(TypeError):
+            client.upsert_meta(t1)
+        with self.assertRaises(ValueError):
+            client.upsert_meta('t2',t1)
+        with self.assertRaises(ValueError):
+            client.upsert_meta('t1',{'data':2})
 
+    async def test_select(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        await server.run()
+        client = TSDBClient()
+        t1 = TimeSeries([0,1,2],[4,5,6])
+        client.insert_ts('t1',t1)
+        client.upsert_meta('t1',{'order':2})
+        _, res = client.select(fields=['ts'])
+        self.assertEqual(t1,TimeSeries(res['t1']['ts']))
+        _, res = client.select(fields=['order'])
+        self.assertEqual(2,res['t1']['order'])
+        with self.assertRaises(ValueError):
+            _, res = client.select(fields='garden')
+                         
+
+    async def test_augmented_select(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        await server.run()
+        client = TSDBClient()
+        t1 = TimeSeries([0,1,2],[4,5,6])
+        t2 = TimeSeries([0,1,2],[5,5,5])
+        t3 = TimeSeries([0,1,2],[6,7,8])
+        client.insert_ts('t1',t1)
+        client.upsert_meta('t1',{'order':2, 'blarg':1})
+        _, res = client.augmented_select('stats', ['average','stdev'])
+        self.assertEqual(t2.mean(),res['t1']['average'])
+        self.assertNotEqual(t2.std(),res['t1']['stdev'])
+        client.insert_ts('t2',t2)
+        client.upsert_meta('t2',{'order':1, 'blarg':1})
+        _, res = client.augmented_select('corr',['distance'],arg=t3, metadata_dict={'order':{'<':3}, 'blarg':1})
+        self.assertTrue(res['t1']['distance'] < 1e-10)
+        self.assertTrue(res['t2']['distance'] > 1e-10)
+        
+    async def test_add_trigger(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        await server.run()
+        client = TSDBClient()
+        t1 = TimeSeries([0,1,2],[4,5,6])
+        t2 = TimeSeries([0,1,2],[5,5,5])
+        t3 = TimeSeries([0,1,2],[6,7,8])
+        client.add_trigger('stats', 'insert_ts', ['mean', 'std'], None)
+        client.insert_ts('t1',t1)
+        _, res = client.select(fields=['mean','std'])
+        self.assertEqual(5,res['t1']['mean'])
+        self.assertEqual(t1.std(),res['t1']['std'])
+        client.add_trigger('corr', 'upsert_meta', ['d-t3'], t3)
+        client.upsert_meta('t1',{'order':2, 'blarg':1})
+        client.insert_ts('t2', t2)
+        client.upsert_meta('t2',{'order':1, 'blarg':0})
+        _, res = client.select(metadata_dict={'order':{'<=':2},'blarg':1}, fields = ['d-t3'])
+        self.assertTrue(res['t1']['d-t3'] < 1e-9)
+        self.assertTrue('t2' not in res)
+        with self.assertRaises(ValueError):
+            _, res = client.select(fields=['d-t1'])
+        
+    async def test_remove_trigger(self):
+        db = DictDB(schema, 'pk')
+        server = TSDBServer(db)
+        await server.run()
+        client = TSDBClient()
+        t1 = TimeSeries([0,1,2],[4,5,6])
+        t2 = TimeSeries([0,1,2],[5,5,5])
+        t3 = TimeSeries([0,1,2],[6,7,8])
+        client.add_trigger('stats', 'insert_ts', ['mean', 'std'], None)
+        client.insert_ts('t1',t1)
+        client.remove_trigger('stats', 'insert_ts')
+        client.add_trigger('corr', 'upsert_meta', ['d-t3'], t3)
+        client.upsert_meta('t1',{'order':2, 'blarg':1})
+        client.insert_ts('t2', t2)
+        client.upsert_meta('t2',{'order':1, 'blarg':0})
+        _, res = client.select(fields = ['mean'])
+        self.assertTrue('t1' in res)
+        self.assertTrue('t2' not in res)
+        client.remove_trigger('corr', 'upsert_meta')
+        client.insert_ts('t3', t3)
+        client.upsert_meta('t3',{'order':1, 'blarg':0})
+        _, res = client.select(fields = ['d-t3'])
+        with self.assertRaises(KeyError):
+            res['t3']
+            
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)

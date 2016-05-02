@@ -114,7 +114,6 @@ def main():
             least = results[key]['distance']
             key_vp = key
     dist_vp = results[key_vp]['distance']
-    print("Closest vantage point", key_vp,dist_vp)
     ind = vpkeys.index(key_vp)
     #closest_vp 
     # Step 2: find all time series within 2*d(query, nearest_vp_to_query)
