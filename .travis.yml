@@ -8,10 +8,6 @@ before_install:
     - pip install pytest pytest-cov
     - pip install ply
     - pip install coveralls
-    - pip install timeseries
-    - pip install pype
-    - pip install tsdb
-    - pip install procs
 script:
     - py.test --doctest-modules
 after_success:
