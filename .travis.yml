@@ -1,6 +1,5 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
-# THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
 
 language: python
 python:
@@ -10,8 +9,10 @@ before_install:
     - pip install ply
     - pip install coveralls
     - pip install timeseries
+    - pip install pype
+    - pip install tsdb
+    - pip install procs
 script:
-    - cd timeseries
     - py.test --doctest-modules
 after_success:
     - coveralls
