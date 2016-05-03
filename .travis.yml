@@ -28,7 +28,8 @@ install:
 
 # Run test
 script:
-  - nosetests --with-cov --cover-tests py.test --logging-level=INFO
+  - py.test --doctest-modules
+#  - nosetests --with-cov --cover-tests py.test --logging-level=INFO
 # --doctest-modules
 
 # Calculate coverage
