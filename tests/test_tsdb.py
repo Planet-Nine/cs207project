@@ -83,6 +83,48 @@ class MyTest(unittest.TestCase):
         pks, fields = db.select(meta={}, fields=None, additional={'sort_by':'-order', 'limit':2})
         self.assertEqual(pks, ['two', 'one'])
         
-    
+    ############## TEST WORKS ON LOCAL MACHINE BUT NOT IN TRAVIS #################################
+    #def test_client_ops(self):
+    #    schema["d_t3"] = {'convert': float, 'index': 1}
+    #    db = DictDB(schema, 'pk')
+    #    server = TSDBServer(db)
+    #    def tests(self,t):
+    #        client = TSDBClient()
+    #        t1 = TimeSeries([0,1,2],[4,5,6])
+    #        t2 = TimeSeries([0,1,2],[5,5,5.5])
+    #        t3 = TimeSeries([0,1,2],[6,7,8])
+    #        client.add_trigger('stats', 'insert_ts', ['mean', 'std'], None)
+    #        client.insert_ts('t1',t1)
+    #        client.remove_trigger('stats', 'insert_ts')
+    #        client.add_trigger('corr', 'upsert_meta', ['d-t3'], t3)
+    #        client.upsert_meta('t1',{'order':2, 'blarg':1})
+    #        client.insert_ts('t2', t2)
+    #        client.upsert_meta('t2',{'order':1, 'blarg':0})
+    #        _, res = client.select(fields = ['mean'])
+    #        self.assertTrue('t1' in res)
+    #        self.assertTrue('mean' not in res['t2'])
+    #        client.remove_trigger('corr', 'upsert_meta')
+    #        client.insert_ts('t3', t3)
+    #        client.upsert_meta('t3',{'order':1, 'blarg':0})
+    #        _, res = client.select(fields = ['d-t3'])
+    #        self.assertTrue('d-t3' not in res['t3'])
+    #        _, res = client.select(fields=['mean','std'])
+    #        self.assertEqual(5,res['t1']['mean'])
+    #        self.assertEqual(t1.std(),res['t1']['std'])
+    #        with self.assertRaises(TypeError):
+    #            client.insert_ts(t1)
+    #        _, res = client.insert_ts('t1',t1)
+    #        self.assertEqual(_,TSDBStatus.INVALID_KEY)
+    #        _, res = client.augmented_select('corr',['distance'],arg=t3, metadata_dict={'order':{'<':3}, 'blarg':{'<=':1}})
+    #        self.assertTrue(res['t1']['distance'] < 1e-10)
+    #        self.assertTrue(res['t2']['distance'] > 1e-10)
+    #        t.terminate()
+        
+    #    t = multiprocessing.Process(target=server.run)
+    #    t.start()
+    #    time.sleep(0.5)
+    #    tests(self,t)
+    #    t.terminate()
+        
 suite = unittest.TestLoader().loadTestsFromModule(MyTest())
 unittest.TextTestRunner().run(suite)
