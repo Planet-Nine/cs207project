@@ -27,7 +27,7 @@ install:
 
 # Run test
 script:
-  - nosetests --with-cov --cover-tests py.test --cov-config .coveragerc --logging-level=INFO
+  - nosetests --with-cov --cover-tests py.test .coveragerc --logging-level=INFO
 # --doctest-modules
 
 # Calculate coverage
