@@ -2,36 +2,67 @@
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 
 language: python
+python:
+  - 3.5
 
-matrix:
-  include:
-    - python: 3.5
-      env: NUMPY=1.10 SCIPY=0.16
-
-
+# Setup anaconda
 before_install:
- - travis_retry wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh
- - chmod +x miniconda.sh
- - bash miniconda.sh -b -p $HOME/miniconda
- - export PATH=/home/travis/miniconda/bin:$PATH
- - conda update --yes conda
- - pip install pytest pytest-cov
- - pip install ply
- - pip install coveralls
-
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+  # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+  - pip install pytest pytest-cov
+  - pip install ply
+# Install packages
 install:
- - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
- - source activate test
- - conda install --yes numpy=$NUMPY scipy=$SCIPY matplotlib pip
- - pip install setuptools
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels
+  # Coverage packages are on my binstar channel
+  - conda install --yes -c dan_blanchard python-coveralls nose-cov
+#  - python setup.py install
+
+# Run test
+script:
+  - nosetests --with-cov --cov py.test --doctest-modules --cov-config .coveragerc --logging-level=INFO
+
+# Calculate coverage
+after_success:
+  - coveralls --config_file .coveragerc
+  
+#language: python
+
+#matrix:
+#  include:
+#    - python: 3.5
+#      env: NUMPY=1.10 SCIPY=0.16
+
+
+#before_install:
+# - travis_retry wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh
+# - chmod +x miniconda.sh
+# - bash miniconda.sh -b -p $HOME/miniconda
+# - export PATH=/home/travis/miniconda/bin:$PATH
+# - conda update --yes conda
+# - pip install pytest pytest-cov
+# - pip install ply
+# - pip install coveralls
+
+#install:
+# - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+# - source activate test
+# - conda install --yes numpy=$NUMPY scipy=$SCIPY matplotlib pip
+# - pip install setuptools
 # - [ ... some other packages to install ... ]
 # - python setup.py install
 
-script:
- - py.test --doctest-modules
+#script:
+# - py.test --doctest-modules
 
-after_success:
- - coveralls
+#after_success:
+# - coveralls
 #language: python
 #sudo: required
 
@@ -72,6 +103,19 @@ after_success:
 #  - pip install pytest pytest-cov
 #  - pip install ply
 #  - pip install coveralls
+#script:
+#    - py.test --doctest-modules
+#after_success:
+#    - coveralls
+
+############################### ORIGINAL #############################################
+#language: python
+#python:
+#    - "3.5"
+#before_install:
+#    - pip install pytest pytest-cov
+#    - pip install ply
+#    - pip install coveralls
 #script:
 #    - py.test --doctest-modules
 #after_success:
