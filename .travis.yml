@@ -23,9 +23,9 @@ install:
  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
  - source activate test
  - conda install --yes numpy=$NUMPY scipy=$SCIPY matplotlib pip
-# - pip install setuptools
+ - pip install setuptools
 # - [ ... some other packages to install ... ]
-# - python setup.py install
+ - python setup.py install
 
 script:
  - py.test --doctest-modules
