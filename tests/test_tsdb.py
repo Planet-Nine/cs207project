@@ -33,6 +33,8 @@ class MyTest(unittest.TestCase):
         db.insert_ts('ts1', ts1)
         with self.assertRaises(ValueError):
             db.insert_ts('ts1', ts2)
+        with self.assertRaises(ValueError):
+            db.insert_ts('ts1', [[1,2,3],[4,5,6]])
         db.insert_ts('ts2', ts2)
         db.insert_ts('ts3', ts2)
 

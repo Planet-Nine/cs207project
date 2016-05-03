@@ -2,6 +2,9 @@ from collections import defaultdict, OrderedDict
 from operator import and_
 from functools import reduce
 import operator
+import sys
+sys.path.insert(0, '../')   # This is sketchy AF but I'm not sure how else to do it
+from timeseries import TimeSeries
 
 OPMAP = {
     '<': operator.lt,
@@ -45,6 +48,8 @@ class DictDB:
             self.rows[pk] = {'pk': pk}
         else:
             raise ValueError('Duplicate primary key found during insert')
+        if not isinstance(ts, TimeSeries):
+            raise ValueError('Must insert a TimeSeries object')
         self.rows[pk]['ts'] = ts
         self.update_indices(pk)
 
