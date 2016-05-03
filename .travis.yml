@@ -8,6 +8,7 @@ before_install:
     - pip install pytest pytest-cov
     - pip install ply
     - sudo apt-get install -qq python-scipy
+    - alias scipy='python-scipy'
     - pip install coveralls
 script:
     - py.test --doctest-modules
