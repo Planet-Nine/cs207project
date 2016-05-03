@@ -120,6 +120,8 @@ class MyTest(unittest.TestCase):
     #        _, res = client.augmented_select('corr',['distance'],arg=t3, metadata_dict={'order':{'<':3}, 'blarg':{'<=':1}})
     #        self.assertTrue(res['t1']['distance'] < 1e-10)
     #        self.assertTrue(res['t2']['distance'] > 1e-10)
+    #        with self.assertRaises(ValueError):
+    #            _, res = client.augmented_select('corr',['distance'], metadata_dict={'order':{'<':3}, 'blarg':{'<=':1}})
     #        t.terminate()
         
     #    t = multiprocessing.Process(target=server.run)
