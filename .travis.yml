@@ -1,11 +1,11 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 
+virtualenv:
+  system_site_packages: true
 language: python
 python:
     - "3.5"
-virtualenv:
-    system_site_packages: true
 before_install:
     - pip install pytest pytest-cov
     - pip install ply
