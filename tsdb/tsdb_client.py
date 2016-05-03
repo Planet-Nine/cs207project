@@ -12,12 +12,12 @@ class TSDBClient(object):
         #your code here, construct from the code in tsdb_ops.py
         msg = TSDBOp_InsertTS(primary_key, ts).to_json()
         print("C> insert_ts msg", msg)
-        self._send(msg)
+        return self._send(msg)
 
     def upsert_meta(self, primary_key, metadata_dict):
         msg = TSDBOp_UpsertMeta(primary_key, metadata_dict).to_json()
         print("C> upsert msg", msg)
-        self._send(msg)
+        return self._send(msg)
 
     def select(self, metadata_dict={}, fields=None, additional=None):
         #your code here
