@@ -12,6 +12,7 @@ before_install:
     - sudo apt-get install python-scipy
     - pip install coveralls
 script:
+    - alias scipy='python-scipy'
     - py.test --doctest-modules
 after_success:
     - coveralls
