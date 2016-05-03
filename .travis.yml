@@ -15,19 +15,20 @@ before_install:
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-  - pip install pytest pytest-cov
-  - pip install ply
-  - pip install coveralls
+  
 # Install packages
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose pandas statsmodels
   # Coverage packages are on my binstar channel
 #  - conda install --yes -c dan_blanchard python-coveralls nose-cov
 #  - python setup.py install
+  - conda install --yes pytest pytest-cov
+  - conda install --yes ply
+  - conda install --yes coveralls
 
 # Run test
 script:
-  - nosetests --with-cov --cover-tests py.test .coveragerc --logging-level=INFO
+  - nosetests --with-cov --cover-tests py.test --logging-level=INFO
 # --doctest-modules
 
 # Calculate coverage
