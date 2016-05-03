@@ -24,7 +24,7 @@ install:
 #  - python setup.py install
   - conda install --yes pytest pytest-cov
   - conda install --yes ply
-  - conda install --yes -c dan_blanchard python-coveralls
+  - conda install --yes -c omnia python-coveralls=2.5.0
 
 # Run test
 script:
