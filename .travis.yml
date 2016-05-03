@@ -6,7 +6,7 @@ language: python
 matrix:
   include:
     - python: 3.5
-      env: SCIPY=0.16
+      env: NUMPY=1.10 SCIPY=0.16
 
 
 before_install:
@@ -22,7 +22,7 @@ before_install:
 install:
  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
  - source activate test
- - conda install --yes scipy=$SCIPY pip
+ - conda install --yes numpy=$NUMPY scipy=$SCIPY matplotlib pip
 # - pip install setuptools
 # - [ ... some other packages to install ... ]
 # - python setup.py install
