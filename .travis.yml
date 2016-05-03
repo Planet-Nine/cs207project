@@ -2,20 +2,51 @@
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 
 language: python
-sudo: required
 
-python:
-    - "3.5"
+matrix:
+  include:
+    - python: 3.5
+      env: NUMPY=1.8 SCIPY=0.13
+
+
 before_install:
-    - pip install pytest pytest-cov
-    - pip install ply
-    - sudo apt-get install python-scipy
-    - pip install coveralls
+ - travis_retry wget http://repo.continuum.io/miniconda/Miniconda-3.8.3-Linux-x86_64.sh -O miniconda.sh
+ - chmod +x miniconda.sh
+ - bash miniconda.sh -b -p $HOME/miniconda
+ - export PATH=/home/travis/miniconda/bin:$PATH
+ - conda update --yes conda
+ - pip install pytest pytest-cov
+ - pip install ply
+ - pip install coveralls
+
+install:
+ - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+ - source activate test
+ - conda install --yes numpy=$NUMPY scipy=$SCIPY matplotlib pip
+# - pip install setuptools
+# - [ ... some other packages to install ... ]
+# - python setup.py install
+
 script:
-    - alias scipy='python-scipy'
-    - py.test --doctest-modules
+ - py.test --doctest-modules
+
 after_success:
-    - coveralls
+ - coveralls
+#language: python
+#sudo: required
+
+#python:
+#    - "3.5"
+#before_install:
+#    - pip install pytest pytest-cov
+#    - pip install ply
+#    - sudo apt-get install python-scipy
+#    - pip install coveralls
+#script:
+#    - alias scipy='python-scipy'
+#    - py.test --doctest-modules
+#after_success:
+#    - coveralls
 #matrix:
  # include:
   #  - python: "3.5"
