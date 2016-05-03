@@ -15,6 +15,7 @@ before_install:
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
+  - pip install coveralls
   
 # Install packages
 install:
@@ -24,7 +25,6 @@ install:
 #  - python setup.py install
   - conda install --yes pytest pytest-cov
   - conda install --yes ply
-  - conda install --yes coveralls
 
 # Run test
 script:
