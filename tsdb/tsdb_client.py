@@ -27,6 +27,8 @@ class TSDBClient(object):
         
     def augmented_select(self, proc, target, arg=None, metadata_dict={}, additional=None):
         #your code here
+        if arg == None and proc == 'corr':
+            raise ValueError('Cannot use "corr" with no argument')
         msg = TSDBOp_AugmentedSelect(proc, target, arg, metadata_dict, additional).to_json()
         print("C> aug select msg", msg)
         return self._send(msg)
