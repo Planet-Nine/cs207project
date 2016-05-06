@@ -7,6 +7,8 @@ import sys
 sys.path.insert(0, '../')   # This is sketchy AF but I'm not sure how else to do it
 from timeseries import TimeSeries
 import os
+import procs
+import random
 
 OPMAP = {
     '<': operator.lt,
@@ -31,7 +33,8 @@ def metafiltered(d, schema, fieldswanted):
 
 class PersistentDB:
     "Database implementation with a local dictionary, which saves all necessary data to files for later use"
-    def __init__(self, schema, pkfield, load=False, dbname="db", overwrite=False):
+
+    def __init__(self, schema, pkfield, load=False, dbname="db", overwrite=False, dist=procs.corr_indb):
         """
         Parameters
         ----------
@@ -79,6 +82,10 @@ class PersistentDB:
                         raise ValueError("Primary key must be of type str")
                     if schema[field]['type'] not in [int, float, bool, str]:
                         raise ValueError("Only types int, float, bool, and str are supported")
+                if field[:5] == 'd_vp-':
+                    raise ValueError("Field names beginning with 'd_vp-' are forbidden")
+                if field == 'vp' and schema[field]['type'] != bool:
+                    raise ValueError("Field 'vp' must be of boolean type")
         else:
             raise ValueError("Schema must be a dictionary")
         if pkfield not in schema:
@@ -92,6 +99,8 @@ class PersistentDB:
         self.pkfield = pkfield
         self.tslen = None
         self.overwrite = overwrite
+        self.dist = dist
+        self.vps = []
         for s in schema:
             indexinfo = schema[s]['index']
             # convert = schema[s]['type']
@@ -111,16 +120,26 @@ class PersistentDB:
                         if pk not in self.rows:
                             self.rows[pk] = {pkfield:pk}
                         else:
-                            self.rows[pk][field] = self.schema[field]['type'](val)
+                            if self.schema[field]['type'] == bool:
+                                if val == 'False': 
+                                    self.rows[pk][field] = False
+                                else:
+                                    self.rows[pk][field] = True
+                            else:
+                                self.rows[pk][field] = self.schema[field]['type'](val)
+                        if field == 'vp' and val == 'True':
+                            self.vps.append(pk)
+                            self.indexes['d_vp-'+pk] = defaultdict(set)
                     elif field == 'DELETE':
+                        if 'vp' in schema and self.rows[pk]['vp'] == True:
+                            self.del_vp(pk)
                         del self.rows[pk]
+                    elif field[:5] == 'd_vp-':
+                        self.rows[pk][field] = float(val)
                     else:
                         raise IOError("Database is incompatible with input schema")
                 fd.close()
                 
-                # Separate vantage point file?
-                # Will need to add something here for vantage points
-
                 # Read in timeseries of non-deleted keys
                 for pk in self.rows:
                     tsarray = np.load(self.dbname+"_ts/"+pk+"_ts.npy")
@@ -165,42 +184,137 @@ class PersistentDB:
         else:
             fd = open(self.dbname, 'a')
         fd.write(pk+':'+self.pkfield+':'+pk+'\n')
+        if 'vp' in self.schema:
+            fd.write(pk+':vp:False\n')
         fd.close()
 
         self.rows[pk]['ts'] = ts  
+        if 'vp' in self.schema:
+            self.rows[pk]['vp'] = False
+
+        for vp in self.vps:
+            ts1 = self.rows[vp]['ts']
+            self.upsert_meta(pk, {'d_vp-'+vp : self.dist(ts1,ts)})
+
         self.update_indices(pk)
 
     def delete_ts(self, pk):
         if pk in self.rows:
+            if self.rows[pk]['vp'] == True:
+                self.del_vp(pk)
             del self.rows[pk]
             fd = open(self.dbname, 'a')
             fd.write(pk+':DELETE:0\n')
             fd.close()
-
+        
     def upsert_meta(self, pk, meta):
         if isinstance(meta, dict) == False:
             raise ValueError('Metadata should be in the form of a dictionary')
         if pk not in self.rows:
             raise ValueError('Timeseries should be added prior to metadata')
         for field in meta:
-            if field not in self.schema:
+            if field in self.schema:
+                try:
+                    convertedval = self.schema[field]['type'](meta[field])
+                    if self.schema[field]['type'] == str and ':' in convertedval:
+                        raise ValueError("Strings may not include the ':' character") 
+                    self.rows[pk][field] = meta[field]
+                except:
+                    raise ValueError("Value not compatible with type specified in schema")
+            elif field[:5] == 'd_vp-':
+                self.rows[pk][field] = float(meta[field])
+            else:
                 raise ValueError('Field not supported by schema')
-            try:
-                convertedval = self.schema[field]['type'](meta[field])
-                if self.schema[field]['type'] == str and ':' in convertedval:
-                    raise ValueError("Strings may not include the ':' character") 
-                self.rows[pk][field] = meta[field]
-            except:
-                raise ValueError("Value not compatible with type specified in schema")
+
 
         fd = open(self.dbname, 'a')
         for field in meta:
             fd.write(pk+':'+field+':'+str(meta[field])+'\n')
         fd.close()
 
-        # Might need to do something about vantage points here
-
         self.update_indices(pk)
+
+    def add_vp(self, pk=None, dist=procs.corr_indb):
+        """
+        Adds pk as a vantage point
+
+        Parameters
+        ----------
+        pk : str or None
+            The primary key of the timeseries which is to be added as a vantage point.
+            If None, method will choose a random entry in the database.
+        dist : function
+            The function used to compute distances between timeseries objects.
+            Must have arguments (ts1, ts2).
+        """
+
+        # ---- Validating input ---- #
+        if 'vp' not in self.schema:
+            raise ValueError("Vantage points not supported by schema, must include 'vp' field")
+        if pk is None:
+            pkrand = self.rows.keys()
+            random.shuffle(list(pkrand))
+            foundvp = False
+            for k in pkrand:
+                if self.rows[k]['vp'] == False:
+                    pk = k
+                    foundvp = True
+                    break
+            if foundvp == False:
+                raise ValueError("No more primary keys available as vantage points")
+        elif pk not in self.rows:
+            raise ValueError("Primary key not in database")
+        elif self.rows[pk]['vp']:
+            raise ValueError("This timeseries is already a vantage point")
+        if self.dist is None:
+            self.dist = dist
+        elif self.dist != dist:
+            raise ValueError("All vantage points must follow same distance calculation")
+        
+        self.vps.append(pk)
+        self.upsert_meta(pk, {'vp':True})
+        ts1 = self.rows[pk]['ts']
+        for key in self.rows:
+            ts2 = self.rows[key]['ts']
+            self.upsert_meta(key, {'d_vp-'+pk:self.dist(ts1,ts2)})
+        
+    def del_vp(self, vp):
+        """ Removes the d_vp-vp field from all rows """
+        for pk in self.rows:
+            del self.rows[pk]['d_vp-'+vp]
+        self.vps.remove(vp)
+        del self.indexes['d_vp-'+vp]
+
+    def simsearch(self, ts):
+        """ Search over all timeseries in the database and return the primary key 
+          of the object which is closest """
+        if not isinstance(ts, TimeSeries):
+            raise ValueError("Input must be a TimeSeries object")
+        if len(self.vps) == 0:
+            raise ValueError("Database must contain vantage points before simsearch can be called")
+
+        # Find closest vantage point
+        closestvp = None
+        vpdist = None
+        for vp in self.vps:
+            thisdist = self.dist(ts, self.rows[vp]['ts'])
+            if vpdist is None or thisdist < vpdist:
+                closestvp = vp
+                vpdist = thisdist
+        
+        # Select all timeseries within 2*vpdist from closestvp
+        closepks,_ = self.select(meta={'d_vp-'+closestvp:{'<=':2*vpdist}}, fields=None)
+
+        # Find closest timeseries
+        closestpk = None
+        pkdist = None
+        for pk in closepks:
+            thisdist = self.dist(ts, self.rows[pk]['ts'])
+            if pkdist is None or thisdist < pkdist:
+                closestpk = pk
+                pkdist = thisdist
+
+        return closestpk
 
     def index_bulk(self, pks=[]):
         if len(pks) == 0:
@@ -213,7 +327,7 @@ class PersistentDB:
         row = self.rows[pk]
         for field in row:
             v = row[field]
-            if self.schema[field]['index'] is not None:
+            if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
                 idx = self.indexes[field]
                 idx[v].add(pk)
 
@@ -244,7 +358,7 @@ class PersistentDB:
             first = True
             for field in meta:
                 # Define operator  (For now assuming just one per field)
-                if type(meta[field]) == dict or type(meta[field]) == OrderedDict:
+                if isinstance(meta[field],dict):
                     for opkey in meta[field]:
                         op = OPMAP[opkey]
                         compval = meta[field][opkey]
@@ -253,7 +367,7 @@ class PersistentDB:
                     compval = meta[field]
 
                 pks_field = []
-                if field not in self.schema:
+                if field not in self.schema and field[:5] != 'd_vp-':
                     raise ValueError('Field not supported by schema')
                 else:
                     for val in self.indexes[field]:
