@@ -1,0 +1,8 @@
+\BOOKMARK [2][-]{subsection.0.1}{Problem Setting and Algorithm}{}% 1
+\BOOKMARK [2][-]{subsection.0.2}{Implementation in Python}{}% 2
+\BOOKMARK [2][-]{subsection.0.3}{Running with Data}{}% 3
+\BOOKMARK [2][-]{subsection.0.4}{Scikit Learn Optimizations}{}% 4
+\BOOKMARK [3][-]{subsubsection.0.4.1}{Optimizations in Loss Function}{subsection.0.4}% 5
+\BOOKMARK [3][-]{subsubsection.0.4.2}{Optimizations in Data Storage}{subsection.0.4}% 6
+\BOOKMARK [3][-]{subsubsection.0.4.3}{Optimizations in Weights}{subsection.0.4}% 7
+\BOOKMARK [3][-]{subsubsection.0.4.4}{Optimizations in SGD algorithm}{subsection.0.4}% 8

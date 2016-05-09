@@ -1,0 +1,803 @@
+
+% Default to the notebook output style
+
+    
+
+
+% Inherit from the specified cell style.
+
+
+
+
+    
+\documentclass{article}
+
+    
+    
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size 
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range 
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    \usepackage{ulem} % ulem is needed to support strikethroughs (\sout)
+    
+
+    
+    
+    \definecolor{orange}{cmyk}{0,0.4,0.8,0.2}
+    \definecolor{darkorange}{rgb}{.71,0.21,0.01}
+    \definecolor{darkgreen}{rgb}{.12,.54,.11}
+    \definecolor{myteal}{rgb}{.26, .44, .56}
+    \definecolor{gray}{gray}{0.45}
+    \definecolor{lightgray}{gray}{.95}
+    \definecolor{mediumgray}{gray}{.8}
+    \definecolor{inputbackground}{rgb}{.95, .95, .85}
+    \definecolor{outputbackground}{rgb}{.95, .95, .95}
+    \definecolor{traceback}{rgb}{1, .95, .95}
+    % ansi colors
+    \definecolor{red}{rgb}{.6,0,0}
+    \definecolor{green}{rgb}{0,.65,0}
+    \definecolor{brown}{rgb}{0.6,0.6,0}
+    \definecolor{blue}{rgb}{0,.145,.698}
+    \definecolor{purple}{rgb}{.698,.145,.698}
+    \definecolor{cyan}{rgb}{0,.698,.698}
+    \definecolor{lightgray}{gray}{0.5}
+    
+    % bright ansi colors
+    \definecolor{darkgray}{gray}{0.25}
+    \definecolor{lightred}{rgb}{1.0,0.39,0.28}
+    \definecolor{lightgreen}{rgb}{0.48,0.99,0.0}
+    \definecolor{lightblue}{rgb}{0.53,0.81,0.92}
+    \definecolor{lightpurple}{rgb}{0.87,0.63,0.87}
+    \definecolor{lightcyan}{rgb}{0.5,1.0,0.83}
+    
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \providecommand{\tightlist}{%
+      \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Additional commands for more recent versions of Pandoc
+    \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{{#1}}}
+    \newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{{#1}}}
+    \newcommand{\ImportTok}[1]{{#1}}
+    \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{{#1}}}}
+    \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{{#1}}}
+    \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{{#1}}}
+    \newcommand{\BuiltInTok}[1]{{#1}}
+    \newcommand{\ExtensionTok}[1]{{#1}}
+    \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{{#1}}}
+    \newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{{#1}}}
+    \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    \newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{{#1}}}}}
+    
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatability definitions
+    \def\gt{>}
+    \def\lt{<}
+    % Document parameters
+    \title{SGD draft}
+    
+    
+    
+
+    % Pygments definitions
+    
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@cpf\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@ch\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % Exact colors from NB
+    \definecolor{incolor}{rgb}{0.0, 0.0, 0.5}
+    \definecolor{outcolor}{rgb}{0.545, 0.0, 0.0}
+
+
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=blue,
+      linkcolor=darkorange,
+      citecolor=darkgreen,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+    
+    
+
+    \begin{document}
+    
+    
+    \maketitle
+    
+    
+
+    
+    \subsection{Problem Setting and
+Algorithm}\label{problem-setting-and-algorithm}
+
+Stochastic Gradient Descent (SGD) is a simple yet very efficient
+approach to discriminative learning of linear classifiers under convex
+loss functions such as (linear) Support Vector Machines and Logistic
+Regression. Even though SGD has been around in the machine learning
+community for a long time, it has received a considerable amount of
+attention just recently in the context of large-scale learning. The
+advantages of Stochastic Gradient Descent are: Efficiency, Ease of
+implementation (lots of opportunities for code tuning). The
+disadvantages of Stochastic Gradient Descent include: SGD requires a
+number of hyperparameters such as the regularization parameter and the
+number of iterations, SGD is sensitive to feature scaling.
+
+Given a set of training examples \((x_1,y_1),\cdots,(x_n,y_n)\) where
+\(x_i\in R^n\) \(y_i\in{-1,1}\), the goal of stochastic gradient descent
+is to learn a linear scoring function \(f(x)=w^Tx+b\) with model
+parameters \(w\in R^m\) and intercept \(b\in R\). In order to make
+predictions, we simply look at the sign of \(f(x)\). The regularized
+training error is
+
+\begin{align*}
+E(w,b)&=\frac{1}{n}\sum_{i=1}^n L(y_i,f(x_i))+\alpha R(w)
+\end{align*}
+
+where \(L\) is a loss function and R is a penalty term for model
+complexity; \(\alpha>0\) is a non-negative parameter.
+
+Different choices for L entail different classifiers such as Hinge:
+(soft-margin) Support Vector Machines, Log: Logistic Regression,
+Least-Squares: Ridge Regression, Epsilon-Insensitive: (soft-margin)
+Support Vector Regression. All of the above loss functions can be
+regarded as an upper bound on the misclassification error (Zero-one
+loss).
+
+The choices for regularization terms include: L2 normm
+\(R(w):=\frac{1}{2}\sum w_i^2\), L1 norm \(R(w):=\sum |w_i|\), and
+elastic net \(R(w):=\frac{\rho}{2}\sum w_i^2+(1-\rho)\sum|w_i|\). At
+each time step, \(w\) and \(b\) are updated as follows
+
+\begin{align*}
+w&\leftarrow w-\eta_t(\alpha\frac{\partial R(w)}{\partial w}+\frac{\partial L(w^Tx_i+b,y_i)}{\partial w})\\
+b&\leftarrow b-\eta_t(\frac{\partial L(w^Tx_i+b,y_i)}{\partial b})
+\end{align*}
+
+The algorithm is guaranteed to converge if \(\eta_t\) satisfies the
+Robbins-monro conditions
+
+\begin{align*}
+\sum_{t=1}^\infty \eta_t =\infty, \sum_{t=1}^\infty \eta_t^2 <\infty
+\end{align*}
+
+In this paper we will assume a Hinge loss function, a L2 norm
+regularization term and
+
+\begin{align*}
+\eta_t&=\frac{1}{\alpha(t_0+t)}
+\end{align*}
+
+for Scikit learn \(t_0\) is based on a heuristic proposed by Leon
+Bottou. This is the normal SVM problem.
+
+    \subsection{Implementation in Python}\label{implementation-in-python}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}1}]:} \PY{k}{class} \PY{n+nc}{Lossfunction}\PY{p}{:}
+            \PY{k}{def} \PY{n+nf}{loss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{p}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+                \PY{k}{return} \PY{l+m+mi}{0}
+            \PY{k}{def} \PY{n+nf}{dloss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{p}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+                \PY{k}{return} \PY{l+m+mi}{0}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}2}]:} \PY{k}{class} \PY{n+nc}{Hinge}\PY{p}{(}\PY{n}{Lossfunction}\PY{p}{)}\PY{p}{:}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{threshold}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}\PY{p}{:}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{o}{=}\PY{n}{threshold}
+            \PY{k}{def} \PY{n+nf}{loss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{p}\PY{p}{,} \PY{n}{y}\PY{p}{)}\PY{p}{:}
+                \PY{n}{z}\PY{o}{=}\PY{n}{p}\PY{o}{*}\PY{n}{y}
+                
+                \PY{k}{if} \PY{n}{z}\PY{o}{\PYZlt{}}\PY{o}{=}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{p}{:}
+                    \PY{k}{return} \PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{o}{\PYZhy{}}\PY{n}{z}\PY{p}{)}
+                \PY{k}{return} \PY{l+m+mi}{0}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}dloss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{p} \PY{p}{,}\PY{n}{y}\PY{p}{)}\PY{p}{:}
+                \PY{n}{z}\PY{o}{=} \PY{n}{p}\PY{o}{*}\PY{n}{y}
+                \PY{k}{if} \PY{n}{z}\PY{o}{\PYZlt{}}\PY{o}{=}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{p}{:}
+                    \PY{k}{return} \PY{o}{\PYZhy{}}\PY{n}{y}
+                \PY{k}{return} \PY{l+m+mi}{0}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}3}]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+        \PY{k}{class} \PY{n+nc}{sgddata}\PY{p}{:}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{X}\PY{p}{,} \PY{n}{Y}\PY{p}{,} \PY{n}{sample\PYZus{}weights}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,}\PY{n}{seed}\PY{o}{=}\PY{k+kc}{None}\PY{p}{)}\PY{p}{:}
+                \PY{k}{if} \PY{n+nb}{len}\PY{p}{(}\PY{n}{X}\PY{p}{)}\PY{o}{!=}\PY{n+nb}{len}\PY{p}{(}\PY{n}{Y}\PY{p}{)}\PY{p}{:}
+                    \PY{k}{raise} \PY{n+ne}{IndexError}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{X, Y not same length}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{X}\PY{p}{)}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{n}{Y}\PY{p}{)}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{sample\PYZus{}weights} \PY{o}{=} \PY{n}{sample\PYZus{}weights}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n\PYZus{}samples} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n\PYZus{}features} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{current\PYZus{}index} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}next\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{current\PYZus{}index} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+                \PY{k}{return} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X}\PY{p}{[}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{current\PYZus{}index}\PY{p}{]}\PY{p}{,} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y}\PY{p}{[}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{current\PYZus{}index}\PY{p}{]}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}reset}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{current\PYZus{}index} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}
+            \PY{k}{def} \PY{n+nf}{shuffle}\PY{p}{(}\PY{n+nb+bp}{self} \PY{p}{,}\PY{n}{seed}\PY{o}{=}\PY{k+kc}{None}\PY{p}{)}\PY{p}{:}
+                \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{seed}\PY{p}{(}\PY{n}{seed}\PY{p}{)}
+                \PY{n}{idx} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{random}\PY{o}{.}\PY{n}{permutation}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n\PYZus{}samples}\PY{p}{)}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X}\PY{p}{[}\PY{n}{idx}\PY{p}{]}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y}\PY{p}{[}\PY{n}{idx}\PY{p}{]}
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}str\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
+                \PY{k}{return} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{,}\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n+nb}{str}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X}\PY{p}{)}\PY{p}{,} \PY{n+nb}{str}\PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}4}]:} \PY{k+kn}{from} \PY{n+nn}{time} \PY{k}{import} \PY{n}{time}
+        \PY{k}{def} \PY{n+nf}{sgd}\PY{p}{(} \PY{n}{weights}\PY{p}{,}
+                       \PY{n}{intercept}\PY{p}{,}
+                       \PY{n}{loss}\PY{p}{,}
+                       \PY{n}{penalty\PYZus{}type}\PY{p}{,}
+                       \PY{n}{alpha}\PY{p}{,}  
+                       \PY{n}{dataset}\PY{p}{,}
+                       \PY{n}{n\PYZus{}iter}\PY{p}{,} \PY{n}{fit\PYZus{}intercept}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,}
+                       \PY{n}{verbose}\PY{o}{=}\PY{k+kc}{False}\PY{p}{,} \PY{n}{shuffle}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{seed}\PY{o}{=}\PY{k+kc}{None}\PY{p}{,}
+                       \PY{n}{weight\PYZus{}pos}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{weight\PYZus{}neg}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,}
+                       \PY{n}{eta0}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,}
+                       \PY{n}{t}\PY{o}{=}\PY{l+m+mf}{1.0}\PY{p}{,}
+                       \PY{n}{intercept\PYZus{}decay}\PY{o}{=}\PY{l+m+mf}{1.0}\PY{p}{)}\PY{p}{:}
+            \PY{n}{MAX\PYZus{}DLOSS} \PY{o}{=} \PY{l+m+mi}{1}\PY{n}{e12}
+            \PY{n}{eta} \PY{o}{=} \PY{n}{eta0}
+            \PY{n}{l1\PYZus{}ratio} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{sumlosslist} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+            \PY{n}{n\PYZus{}samples}\PY{o}{=}\PY{n}{dataset}\PY{o}{.}\PY{n}{n\PYZus{}samples}
+            \PY{n}{typw} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{l+m+mf}{1.0} \PY{o}{/} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{alpha}\PY{p}{)}\PY{p}{)}
+            \PY{c+c1}{\PYZsh{} computing eta0, the initial learning rate}
+            \PY{n}{initial\PYZus{}eta0} \PY{o}{=} \PY{n}{typw} \PY{o}{/} \PY{n+nb}{max}\PY{p}{(}\PY{l+m+mf}{1.0}\PY{p}{,} \PY{n}{loss}\PY{o}{.}\PY{n}{dloss}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{typw}\PY{p}{,} \PY{l+m+mf}{1.0}\PY{p}{)}\PY{p}{)}
+            \PY{c+c1}{\PYZsh{} initialize t such that eta at first sample equals eta0}
+            \PY{n}{optimal\PYZus{}init} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{/} \PY{p}{(}\PY{n}{initial\PYZus{}eta0} \PY{o}{*} \PY{n}{alpha}\PY{p}{)}
+            \PY{n}{t\PYZus{}start} \PY{o}{=} \PY{n}{time}\PY{p}{(}\PY{p}{)}
+            \PY{k}{for} \PY{n}{epoch} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}iter}\PY{p}{)}\PY{p}{:}
+                \PY{n}{sumloss}\PY{o}{=}\PY{l+m+mi}{0}
+        
+                \PY{k}{if} \PY{n}{shuffle}\PY{p}{:}
+                    \PY{n}{dataset}\PY{o}{.}\PY{n}{shuffle}\PY{p}{(}\PY{n}{seed}\PY{p}{)}
+                \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}samples}\PY{p}{)}\PY{p}{:}
+                    \PY{n}{x\PYZus{}current}\PY{p}{,}\PY{n}{y\PYZus{}current} \PY{o}{=} \PY{n+nb}{next}\PY{p}{(}\PY{n}{dataset}\PY{p}{)}
+                    \PY{n}{p} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{x\PYZus{}current}\PY{p}{,}\PY{n}{weights}\PY{p}{)} \PY{o}{+} \PY{n}{intercept}
+                    \PY{n}{eta} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{/} \PY{p}{(}\PY{n}{alpha} \PY{o}{*} \PY{p}{(}\PY{n}{optimal\PYZus{}init} \PY{o}{+} \PY{n}{t} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+                    \PY{k}{if} \PY{n}{y\PYZus{}current} \PY{o}{\PYZgt{}} \PY{l+m+mf}{0.0}\PY{p}{:}
+                        \PY{n}{class\PYZus{}weight} \PY{o}{=} \PY{n}{weight\PYZus{}pos}
+                    \PY{k}{else}\PY{p}{:}
+                        \PY{n}{class\PYZus{}weight} \PY{o}{=} \PY{n}{weight\PYZus{}neg}
+                    \PY{n}{dloss} \PY{o}{=} \PY{n}{loss}\PY{o}{.}\PY{n}{\PYZus{}dloss}\PY{p}{(}\PY{n}{p}\PY{p}{,} \PY{n}{y\PYZus{}current}\PY{p}{)}
+                    \PY{c+c1}{\PYZsh{} clip dloss with large values to avoid numerical}
+                    \PY{c+c1}{\PYZsh{} instabilities}
+                    \PY{k}{if} \PY{n}{dloss} \PY{o}{\PYZlt{}} \PY{o}{\PYZhy{}}\PY{n}{MAX\PYZus{}DLOSS}\PY{p}{:}
+                        \PY{n}{dloss} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{MAX\PYZus{}DLOSS}
+                    \PY{k}{elif} \PY{n}{dloss} \PY{o}{\PYZgt{}} \PY{n}{MAX\PYZus{}DLOSS}\PY{p}{:}
+                        \PY{n}{dloss} \PY{o}{=} \PY{n}{MAX\PYZus{}DLOSS}
+                    \PY{n}{update} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{eta} \PY{o}{*} \PY{n}{dloss}
+                    \PY{n}{update} \PY{o}{*}\PY{o}{=} \PY{n}{class\PYZus{}weight}
+                    \PY{n}{weights} \PY{o}{*}\PY{o}{=} \PY{p}{(}\PY{n+nb}{max}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mf}{1.0} \PY{o}{\PYZhy{}} \PY{p}{(}\PY{p}{(}\PY{l+m+mf}{1.0} \PY{o}{\PYZhy{}} \PY{n}{l1\PYZus{}ratio}\PY{p}{)} \PY{o}{*} \PY{n}{eta} \PY{o}{*} \PY{n}{alpha}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+                    \PY{k}{if} \PY{n}{update} \PY{o}{!=} \PY{l+m+mf}{0.0}\PY{p}{:}
+                        \PY{n}{weights} \PY{o}{+}\PY{o}{=} \PY{n}{update}\PY{o}{*}\PY{n}{x\PYZus{}current}
+                        \PY{k}{if} \PY{n}{fit\PYZus{}intercept} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{:}
+                            \PY{n}{intercept} \PY{o}{+}\PY{o}{=} \PY{n}{update} \PY{o}{*} \PY{n}{intercept\PYZus{}decay}
+                    \PY{n}{dataset}\PY{o}{.}\PY{n}{\PYZus{}reset}\PY{p}{(}\PY{p}{)}
+                    \PY{n}{t} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+                \PY{k}{if} \PY{n}{verbose} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{:}
+                    \PY{n}{sumloss}\PY{o}{=}\PY{l+m+mi}{0}
+                    \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}samples}\PY{p}{)}\PY{p}{:}
+                        \PY{n}{x\PYZus{}current}\PY{p}{,}\PY{n}{y\PYZus{}current} \PY{o}{=} \PY{n+nb}{next}\PY{p}{(}\PY{n}{dataset}\PY{p}{)}
+                        \PY{n}{p} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{x\PYZus{}current}\PY{p}{,}\PY{n}{weights}\PY{p}{)} \PY{o}{+} \PY{n}{intercept}
+                        \PY{n}{sumloss}\PY{o}{+}\PY{o}{=}\PY{n}{loss}\PY{o}{.}\PY{n}{loss}\PY{p}{(}\PY{n}{p}\PY{p}{,}\PY{n}{y\PYZus{}current}\PY{p}{)}
+        \PY{c+c1}{\PYZsh{}             print(\PYZdq{}loss=\PYZob{}\PYZcb{}\PYZdq{}.format(str(sumloss)))}
+                    \PY{n}{sumlosslist}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{n}{sumloss}\PY{p}{)}
+                    \PY{n}{dataset}\PY{o}{.}\PY{n}{\PYZus{}reset}\PY{p}{(}\PY{p}{)}
+            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{time = }\PY{l+s+si}{\PYZob{}\PYZcb{}}\PY{l+s+s1}{ second}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n+nb}{str}\PY{p}{(}\PY{n}{time}\PY{p}{(}\PY{p}{)}\PY{o}{\PYZhy{}}\PY{n}{t\PYZus{}start}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+            \PY{k}{return} \PY{n}{weights}\PY{p}{,} \PY{n}{intercept}\PY{p}{,}\PY{n}{sumlosslist}
+\end{Verbatim}
+
+    \subsection{Running with Data}\label{running-with-data}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}5}]:} \PY{k+kn}{from} \PY{n+nn}{numpy} \PY{k}{import} \PY{n}{loadtxt}
+        \PY{n}{train} \PY{o}{=} \PY{n}{loadtxt}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{data\PYZus{}stdev2\PYZus{}train.csv}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{X} \PY{o}{=} \PY{n}{train}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{0}\PY{p}{:}\PY{l+m+mi}{2}\PY{p}{]}
+        \PY{n}{Y} \PY{o}{=} \PY{n}{train}\PY{p}{[}\PY{p}{:}\PY{p}{,}\PY{l+m+mi}{2}\PY{p}{:}\PY{l+m+mi}{3}\PY{p}{]}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}6}]:} \PY{n}{weight\PYZus{}init}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{array}\PY{p}{(}\PY{p}{[}\PY{l+m+mf}{0.}\PY{p}{,}\PY{l+m+mf}{0.}\PY{p}{]}\PY{p}{)}
+        \PY{n}{intercept\PYZus{}init} \PY{o}{=} \PY{l+m+mf}{0.}
+        \PY{c+c1}{\PYZsh{} X = [[0., 0.], [1., 1.],[2.,3.]]}
+        \PY{c+c1}{\PYZsh{} y = [\PYZhy{}1, 1, 1]}
+        
+        \PY{n}{dataset} \PY{o}{=} \PY{n}{sgddata}\PY{p}{(}\PY{n}{X}\PY{p}{,}\PY{n}{Y}\PY{p}{)}
+        \PY{n}{loss}\PY{o}{=}\PY{n}{Hinge}\PY{p}{(}\PY{p}{)}
+        \PY{n}{n\PYZus{}iter} \PY{o}{=} \PY{l+m+mi}{1000}
+        \PY{n}{verbose}\PY{o}{=}\PY{k+kc}{True}
+        \PY{n}{weights}\PY{p}{,}\PY{n}{intercept}\PY{p}{,}\PY{n}{sumlosslist}\PY{o}{=}\PY{n}{sgd}\PY{p}{(}\PY{n}{weight\PYZus{}init}\PY{p}{,}\PY{n}{intercept\PYZus{}init}\PY{p}{,}\PY{n}{loss}\PY{p}{,}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{L2}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}\PY{l+m+mf}{0.01}\PY{p}{,}\PY{n}{dataset}\PY{p}{,}\PY{n}{n\PYZus{}iter}\PY{p}{,}\PY{n}{verbose}\PY{o}{=}\PY{n}{verbose}\PY{p}{)}
+        \PY{k+kn}{import} \PY{n+nn}{pylab} \PY{k}{as} \PY{n+nn}{pl}
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
+        \PY{n}{pl}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,}\PY{n}{figsize}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mi}{6}\PY{p}{)}\PY{p}{)}
+        \PY{n}{pl}\PY{o}{.}\PY{n}{scatter}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{,} \PY{n}{c}\PY{o}{=}\PY{p}{(}\PY{l+m+mf}{1.}\PY{o}{\PYZhy{}}\PY{n}{Y}\PY{p}{)}\PY{p}{,} \PY{n}{s}\PY{o}{=}\PY{l+m+mi}{50}\PY{p}{,} \PY{n}{cmap} \PY{o}{=} \PY{n}{pl}\PY{o}{.}\PY{n}{cm}\PY{o}{.}\PY{n}{cool}\PY{p}{)}
+        \PY{n}{x1} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{n+nb}{min}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{o}{*}\PY{l+m+mf}{0.7}\PY{p}{,}\PY{n+nb}{max}\PY{p}{(}\PY{n}{X}\PY{p}{[}\PY{p}{:}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{o}{*}\PY{l+m+mf}{0.7}\PY{p}{,}\PY{l+m+mi}{10}\PY{p}{)}
+        \PY{n}{x2} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{p}{(}\PY{n}{weights}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{*}\PY{n}{x1}\PY{o}{+}\PY{n}{intercept}\PY{p}{)}\PY{o}{/}\PY{n}{weights}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}
+        \PY{n}{pl}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x1}\PY{p}{,}\PY{n}{x2}\PY{p}{)}
+        \PY{k}{if} \PY{n}{verbose}\PY{p}{:}
+            \PY{n}{pl}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,}\PY{n}{figsize}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mi}{6}\PY{p}{)}\PY{p}{)}
+            \PY{n}{pl}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}iter}\PY{p}{)}\PY{p}{,}\PY{n}{sumlosslist}\PY{p}{)}
+\end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+time = 12.75475263595581 second
+    \end{Verbatim}
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{SGD draft_files/SGD draft_8_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{SGD draft_files/SGD draft_8_2.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    We see from the top figure that the SGD algorithm arrived a reasonable
+conclusion. Our bottom plot shows the stochastic nature of the process
+of convergence. Setting \(\alpha\) to a smaller value increases the step
+size and leads to higher fluctuations.
+
+    \subsection{Scikit Learn
+Optimizations}\label{scikit-learn-optimizations}
+
+Scikit learn optimizes SGD using Cython. The optimizations mostly happen
+in three areas: 1. The loss function, 2. The data structure that stores
+the data, 3. The datastructure that stores and updates the weight vector
+and 4. The implementation of SGD itself.
+
+    \subsubsection{Optimizations in Loss
+Function}\label{optimizations-in-loss-function}
+
+The hinge loss function is implemented in Cython at lines 138-167,
+copied below. Besides the \textbf{init} function all other functions are
+cdef functions. Static typing is used throughout the implementation.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{cdef} \PY{k}{class} \PY{n+nc}{Hinge}\PY{p}{(}\PY{n}{Classification}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Hinge loss for binary classification tasks with y in \PYZob{}\PYZhy{}1,1\PYZcb{}}
+        \PY{l+s+sd}{    Parameters}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    threshold : float \PYZgt{} 0.0}
+        \PY{l+s+sd}{        Margin threshold. When threshold=1.0, one gets the loss used by SVM.}
+        \PY{l+s+sd}{        When threshold=0.0, one gets the loss used by the Perceptron.}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+        
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{threshold}
+        
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}init\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{double} \PY{n}{threshold}\PY{o}{=}\PY{l+m+mf}{1.0}\PY{p}{)}\PY{p}{:}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold} \PY{o}{=} \PY{n}{threshold}
+        
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{loss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{double} \PY{n}{p}\PY{p}{,} \PY{n}{double} \PY{n}{y}\PY{p}{)} \PY{n}{nogil}\PY{p}{:}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{z} \PY{o}{=} \PY{n}{p} \PY{o}{*} \PY{n}{y}
+                \PY{k}{if} \PY{n}{z} \PY{o}{\PYZlt{}}\PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{p}{:}
+                    \PY{k}{return} \PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold} \PY{o}{\PYZhy{}} \PY{n}{z}\PY{p}{)}
+                \PY{k}{return} \PY{l+m+mf}{0.0}
+        
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{\PYZus{}dloss}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{double} \PY{n}{p}\PY{p}{,} \PY{n}{double} \PY{n}{y}\PY{p}{)} \PY{n}{nogil}\PY{p}{:}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{z} \PY{o}{=} \PY{n}{p} \PY{o}{*} \PY{n}{y}
+                \PY{k}{if} \PY{n}{z} \PY{o}{\PYZlt{}}\PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{p}{:}
+                    \PY{k}{return} \PY{o}{\PYZhy{}}\PY{n}{y}
+                \PY{k}{return} \PY{l+m+mf}{0.0}
+        
+            \PY{k}{def} \PY{n+nf}{\PYZus{}\PYZus{}reduce\PYZus{}\PYZus{}}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{)}\PY{p}{:}
+                \PY{k}{return} \PY{n}{Hinge}\PY{p}{,} \PY{p}{(}\PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{threshold}\PY{p}{,}\PY{p}{)}
+\end{Verbatim}
+
+    \subsubsection{Optimizations in Data
+Storage}\label{optimizations-in-data-storage}
+
+Scikit-learn first convert the data into a ArrayDataset object, which is
+also implemented in Cython. The code that converts the raw input data to
+a ArrayDataset is linked here.
+
+    First, we look at how ArrayDataSet is initialized. At lines 195-196 we
+see that ArrayDataSet creates memoryvies to the numpy array X and Y and
+assign their pointers to X\_data\_ptr and Y\_data\_ptr.
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{o}{\PYZlt{}}\PY{n}{double} \PY{o}{*}\PY{o}{\PYZgt{}}\PY{n}{X}\PY{o}{.}\PY{n}{data}
+        \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{o}{\PYZlt{}}\PY{n}{double} \PY{o}{*}\PY{o}{\PYZgt{}}\PY{n}{Y}\PY{o}{.}\PY{n}{data}
+\end{Verbatim}
+
+    The SGD algorithm goes through the dataset samples one-by-one. This is
+called in the SGD algorithm at lines 606-607, copied below. We see that
+this is implemented within the ArrayDataSet object
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{dataset}\PY{o}{.}\PY{n}{next}\PY{p}{(}\PY{o}{\PYZam{}}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{xnnz}\PY{p}{,}
+                                     \PY{o}{\PYZam{}}\PY{n}{y}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{sample\PYZus{}weight}\PY{p}{)}
+\end{Verbatim}
+
+    We take a closer look at the .next() function. The .next function is
+implemented at lines 20-46 of seq\_dataset.pyx. The ArrayDataSet object
+keeps a data index, which .next() calls, advancing the index by one, and
+then calls the .\_sample function,
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{cdef} \PY{n}{void} \PY{n}{\PYZus{}sample}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{double} \PY{o}{*}\PY{o}{*}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{n+nb}{int} \PY{o}{*}\PY{o}{*}\PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,}
+                              \PY{n+nb}{int} \PY{o}{*}\PY{n}{nnz}\PY{p}{,} \PY{n}{double} \PY{o}{*}\PY{n}{y}\PY{p}{,} \PY{n}{double} \PY{o}{*}\PY{n}{sample\PYZus{}weight}\PY{p}{,}
+                              \PY{n+nb}{int} \PY{n}{current\PYZus{}index}\PY{p}{)} \PY{n}{nogil}\PY{p}{:}
+                \PY{n}{cdef} \PY{n}{long} \PY{n}{long} \PY{n}{sample\PYZus{}idx} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{index\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{n}{current\PYZus{}index}\PY{p}{]}
+                \PY{n}{cdef} \PY{n}{long} \PY{n}{long} \PY{n}{offset} \PY{o}{=} \PY{n}{sample\PYZus{}idx} \PY{o}{*} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X\PYZus{}stride}
+        
+                \PY{n}{y}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{Y\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{n}{sample\PYZus{}idx}\PY{p}{]}
+                \PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{X\PYZus{}data\PYZus{}ptr} \PY{o}{+} \PY{n}{offset}
+                \PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{feature\PYZus{}indices\PYZus{}ptr}
+                \PY{n}{nnz}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{n\PYZus{}features}
+                \PY{n}{sample\PYZus{}weight}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{sample\PYZus{}weight\PYZus{}data}\PY{p}{[}\PY{n}{sample\PYZus{}idx}\PY{p}{]}
+\end{Verbatim}
+
+    We see that the \_sample function takes x\_data\_ptr and y and make it
+so they point to the pointer to the start of \(X_i\). x\_data\_ptr and y
+are then used by the rest of the SGD algorithm to access the current
+sample.
+
+    \subsubsection{Optimizations in Weights}\label{optimizations-in-weights}
+
+The weight vector is stored in a WeightVector object at line 551 in
+sgd\_fast.pyx
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{cdef} \PY{n}{WeightVector} \PY{n}{w} \PY{o}{=} \PY{n}{WeightVector}\PY{p}{(}\PY{n}{weights}\PY{p}{,} \PY{n}{average\PYZus{}weights}\PY{p}{)}
+\end{Verbatim}
+
+    The WeightVector object is defined here. Its mechanism of data storage
+is similar to ArrayDataset, relevant lines below
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{cdef} \PY{n}{double} \PY{o}{*}\PY{n}{wdata} \PY{o}{=} \PY{o}{\PYZlt{}}\PY{n}{double} \PY{o}{*}\PY{o}{\PYZgt{}}\PY{n}{w}\PY{o}{.}\PY{n}{data}
+        
+                \PY{k}{if} \PY{n}{w}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]} \PY{o}{\PYZgt{}} \PY{n}{INT\PYZus{}MAX}\PY{p}{:}
+                    \PY{k}{raise} \PY{n+ne}{ValueError}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{More than }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{ features not supported; got }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{.}\PY{l+s+s2}{\PYZdq{}}
+                                     \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{INT\PYZus{}MAX}\PY{p}{,} \PY{n}{w}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}\PY{p}{)}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{w} \PY{o}{=} \PY{n}{w}
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{w\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{n}{wdata}
+\end{Verbatim}
+
+    All operations that update the weight vector is done within the
+WeightVector object. In particular we look at the add function, which
+scales sample x by constant c and add it to the weight vector. SGD calls
+it byWe copy the add function below
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{n}{cdef} \PY{n}{void} \PY{n}{add}\PY{p}{(}\PY{n+nb+bp}{self}\PY{p}{,} \PY{n}{double} \PY{o}{*}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{n+nb}{int} \PY{o}{*}\PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,} \PY{n+nb}{int} \PY{n}{xnnz}\PY{p}{,}
+                          \PY{n}{double} \PY{n}{c}\PY{p}{)} \PY{n}{nogil}\PY{p}{:}
+                \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}Scales sample x by constant c and adds it to the weight vector.}
+        \PY{l+s+sd}{        This operation updates ``sq\PYZus{}norm``.}
+        \PY{l+s+sd}{        Parameters}
+        \PY{l+s+sd}{        \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{        x\PYZus{}data\PYZus{}ptr : double*}
+        \PY{l+s+sd}{            The array which holds the feature values of ``x``.}
+        \PY{l+s+sd}{        x\PYZus{}ind\PYZus{}ptr : np.intc*}
+        \PY{l+s+sd}{            The array which holds the feature indices of ``x``.}
+        \PY{l+s+sd}{        xnnz : int}
+        \PY{l+s+sd}{            The number of non\PYZhy{}zero features of ``x``.}
+        \PY{l+s+sd}{        c : double}
+        \PY{l+s+sd}{            The scaling constant for the example.}
+        \PY{l+s+sd}{        \PYZdq{}\PYZdq{}\PYZdq{}}
+                \PY{n}{cdef} \PY{n+nb}{int} \PY{n}{j}
+                \PY{n}{cdef} \PY{n+nb}{int} \PY{n}{idx}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{val}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{innerprod} \PY{o}{=} \PY{l+m+mf}{0.0}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{xsqnorm} \PY{o}{=} \PY{l+m+mf}{0.0}
+        
+                \PY{c+c1}{\PYZsh{} the next two lines save a factor of 2!}
+                \PY{n}{cdef} \PY{n}{double} \PY{n}{wscale} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{wscale}
+                \PY{n}{cdef} \PY{n}{double}\PY{o}{*} \PY{n}{w\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{w\PYZus{}data\PYZus{}ptr}
+        
+                \PY{k}{for} \PY{n}{j} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{xnnz}\PY{p}{)}\PY{p}{:}
+                    \PY{n}{idx} \PY{o}{=} \PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{[}\PY{n}{j}\PY{p}{]}
+                    \PY{n}{val} \PY{o}{=} \PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{n}{j}\PY{p}{]}
+                    \PY{n}{innerprod} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{n}{w\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{n}{idx}\PY{p}{]} \PY{o}{*} \PY{n}{val}\PY{p}{)}
+                    \PY{n}{xsqnorm} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{n}{val} \PY{o}{*} \PY{n}{val}\PY{p}{)}
+                    \PY{n}{w\PYZus{}data\PYZus{}ptr}\PY{p}{[}\PY{n}{idx}\PY{p}{]} \PY{o}{+}\PY{o}{=} \PY{n}{val} \PY{o}{*} \PY{p}{(}\PY{n}{c} \PY{o}{/} \PY{n}{wscale}\PY{p}{)}
+        
+                \PY{n+nb+bp}{self}\PY{o}{.}\PY{n}{sq\PYZus{}norm} \PY{o}{+}\PY{o}{=} \PY{p}{(}\PY{n}{xsqnorm} \PY{o}{*} \PY{n}{c} \PY{o}{*} \PY{n}{c}\PY{p}{)} \PY{o}{+} \PY{p}{(}\PY{l+m+mf}{2.0} \PY{o}{*} \PY{n}{innerprod} \PY{o}{*} \PY{n}{wscale} \PY{o}{*} \PY{n}{c}\PY{p}{)}
+\end{Verbatim}
+
+    Getting values from \(X_i\) is done using x\_data\_ptr{[}j{]}, modifying
+the weight vector is done similarly. Note the ``nogil'' argument, this
+declares that the function is safe to call without GIL.
+
+    \subsubsection{Optimizations in SGD
+algorithm}\label{optimizations-in-sgd-algorithm}
+
+The raw code for the SGD algorithm in scikit-learn is here. Since we're
+assuming OPTIMAL leraning rate, hinge loss and L2 regularization, we
+copy the relevant parts of the code below
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{k}{def} \PY{n+nf}{\PYZus{}plain\PYZus{}sgd}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{p}{[}\PY{n}{double}\PY{p}{,} \PY{n}{ndim}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{mode}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{c}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{n}{weights}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{intercept}\PY{p}{,}
+                       \PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{p}{[}\PY{n}{double}\PY{p}{,} \PY{n}{ndim}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{,} \PY{n}{mode}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{c}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{n}{average\PYZus{}weights}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{average\PYZus{}intercept}\PY{p}{,}
+                       \PY{n}{LossFunction} \PY{n}{loss}\PY{p}{,}
+                       \PY{n+nb}{int} \PY{n}{penalty\PYZus{}type}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{alpha}\PY{p}{,} \PY{n}{double} \PY{n}{C}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{l1\PYZus{}ratio}\PY{p}{,}
+                       \PY{n}{SequentialDataset} \PY{n}{dataset}\PY{p}{,}
+                       \PY{n+nb}{int} \PY{n}{n\PYZus{}iter}\PY{p}{,} \PY{n+nb}{int} \PY{n}{fit\PYZus{}intercept}\PY{p}{,}
+                       \PY{n+nb}{int} \PY{n}{verbose}\PY{p}{,} \PY{n}{bint} \PY{n}{shuffle}\PY{p}{,} \PY{n}{np}\PY{o}{.}\PY{n}{uint32\PYZus{}t} \PY{n}{seed}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{weight\PYZus{}pos}\PY{p}{,} \PY{n}{double} \PY{n}{weight\PYZus{}neg}\PY{p}{,}
+                       \PY{n+nb}{int} \PY{n}{learning\PYZus{}rate}\PY{p}{,} \PY{n}{double} \PY{n}{eta0}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{power\PYZus{}t}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{t}\PY{o}{=}\PY{l+m+mf}{1.0}\PY{p}{,}
+                       \PY{n}{double} \PY{n}{intercept\PYZus{}decay}\PY{o}{=}\PY{l+m+mf}{1.0}\PY{p}{,}
+                       \PY{n+nb}{int} \PY{n}{average}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{)}\PY{p}{:}
+        
+            \PY{c+c1}{\PYZsh{} get the data information into easy vars}
+            \PY{n}{cdef} \PY{n}{Py\PYZus{}ssize\PYZus{}t} \PY{n}{n\PYZus{}samples} \PY{o}{=} \PY{n}{dataset}\PY{o}{.}\PY{n}{n\PYZus{}samples}
+            \PY{n}{cdef} \PY{n}{Py\PYZus{}ssize\PYZus{}t} \PY{n}{n\PYZus{}features} \PY{o}{=} \PY{n}{weights}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}
+        
+            \PY{n}{cdef} \PY{n}{WeightVector} \PY{n}{w} \PY{o}{=} \PY{n}{WeightVector}\PY{p}{(}\PY{n}{weights}\PY{p}{,} \PY{n}{average\PYZus{}weights}\PY{p}{)}
+            \PY{n}{cdef} \PY{n}{double}\PY{o}{*} \PY{n}{w\PYZus{}ptr} \PY{o}{=} \PY{o}{\PYZam{}}\PY{n}{weights}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}
+            \PY{n}{cdef} \PY{n}{double} \PY{o}{*}\PY{n}{x\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{n}{NULL}
+            \PY{n}{cdef} \PY{n+nb}{int} \PY{o}{*}\PY{n}{x\PYZus{}ind\PYZus{}ptr} \PY{o}{=} \PY{n}{NULL}
+            \PY{n}{cdef} \PY{n}{double}\PY{o}{*} \PY{n}{ps\PYZus{}ptr} \PY{o}{=} \PY{n}{NULL}
+        
+            \PY{c+c1}{\PYZsh{} helper variables}
+            \PY{n}{cdef} \PY{n}{bint} \PY{n}{infinity} \PY{o}{=} \PY{k+kc}{False}
+            \PY{n}{cdef} \PY{n+nb}{int} \PY{n}{xnnz}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{eta} \PY{o}{=} \PY{l+m+mf}{0.0}\PY{o+ow}{in}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{p} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{update} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{sumloss} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{y} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{sample\PYZus{}weight}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{class\PYZus{}weight} \PY{o}{=} \PY{l+m+mf}{1.0}
+            \PY{n}{cdef} \PY{n}{unsigned} \PY{n+nb}{int} \PY{n}{count} \PY{o}{=} \PY{l+m+mi}{0}
+            \PY{n}{cdef} \PY{n}{unsigned} \PY{n+nb}{int} \PY{n}{epoch} \PY{o}{=} \PY{l+m+mi}{0}
+            \PY{n}{cdef} \PY{n}{unsigned} \PY{n+nb}{int} \PY{n}{i} \PY{o}{=} \PY{l+m+mi}{0}
+            \PY{n}{cdef} \PY{n+nb}{int} \PY{n}{is\PYZus{}hinge} \PY{o}{=} \PY{n+nb}{isinstance}\PY{p}{(}\PY{n}{loss}\PY{p}{,} \PY{n}{Hinge}\PY{p}{)}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{optimal\PYZus{}init} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{dloss} \PY{o}{=} \PY{l+m+mf}{0.0}
+            \PY{n}{cdef} \PY{n}{double} \PY{n}{MAX\PYZus{}DLOSS} \PY{o}{=} \PY{l+m+mi}{1}\PY{n}{e12}
+        
+            \PY{c+c1}{\PYZsh{} q vector is only used for L1 regularization}
+            \PY{n}{cdef} \PY{n}{np}\PY{o}{.}\PY{n}{ndarray}\PY{p}{[}\PY{n}{double}\PY{p}{,} \PY{n}{ndim} \PY{o}{=} \PY{l+m+mi}{1}\PY{p}{,} \PY{n}{mode} \PY{o}{=} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{c}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]} \PY{n}{q} \PY{o}{=} \PY{k+kc}{None}
+            \PY{n}{cdef} \PY{n}{double} \PY{o}{*} \PY{n}{q\PYZus{}data\PYZus{}ptr} \PY{o}{=} \PY{n}{NULL}
+        
+            \PY{k}{if} \PY{n}{penalty\PYZus{}type} \PY{o}{==} \PY{n}{L2}\PY{p}{:}
+                \PY{n}{l1\PYZus{}ratio} \PY{o}{=} \PY{l+m+mf}{0.0}
+        
+        
+            \PY{k}{if} \PY{n}{learning\PYZus{}rate} \PY{o}{==} \PY{n}{OPTIMAL}\PY{p}{:}
+                \PY{n}{typw} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{l+m+mf}{1.0} \PY{o}{/} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{alpha}\PY{p}{)}\PY{p}{)}
+                \PY{c+c1}{\PYZsh{} computing eta0, the initial learning rate}
+                \PY{n}{initial\PYZus{}eta0} \PY{o}{=} \PY{n}{typw} \PY{o}{/} \PY{n+nb}{max}\PY{p}{(}\PY{l+m+mf}{1.0}\PY{p}{,} \PY{n}{loss}\PY{o}{.}\PY{n}{dloss}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{typw}\PY{p}{,} \PY{l+m+mf}{1.0}\PY{p}{)}\PY{p}{)}
+                \PY{c+c1}{\PYZsh{} initialize t such that eta at first sample equals eta0a}
+                \PY{n}{optimal\PYZus{}init} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{/} \PY{p}{(}\PY{n}{initial\PYZus{}eta0} \PY{o}{*} \PY{n}{alpha}\PY{p}{)}
+        
+            \PY{n}{t\PYZus{}start} \PY{o}{=} \PY{n}{time}\PY{p}{(}\PY{p}{)}
+            \PY{k}{with} \PY{n}{nogil}\PY{p}{:}
+                \PY{k}{for} \PY{n}{epoch} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}iter}\PY{p}{)}\PY{p}{:}
+                    \PY{k}{if} \PY{n}{verbose} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{:}
+                        \PY{k}{with} \PY{n}{gil}\PY{p}{:}
+                            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZhy{}\PYZhy{} Epoch }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{epoch} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+                    \PY{k}{if} \PY{n}{shuffle}\PY{p}{:}
+                        \PY{n}{dataset}\PY{o}{.}\PY{n}{shuffle}\PY{p}{(}\PY{n}{seed}\PY{p}{)}
+                    \PY{k}{for} \PY{n}{i} \PY{o+ow}{in} \PY{n+nb}{range}\PY{p}{(}\PY{n}{n\PYZus{}samples}\PY{p}{)}\PY{p}{:}
+                        \PY{n}{dataset}\PY{o}{.}\PY{n}{next}\PY{p}{(}\PY{o}{\PYZam{}}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{xnnz}\PY{p}{,}
+                                     \PY{o}{\PYZam{}}\PY{n}{y}\PY{p}{,} \PY{o}{\PYZam{}}\PY{n}{sample\PYZus{}weight}\PY{p}{)}
+        
+                        \PY{n}{p} \PY{o}{=} \PY{n}{w}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,} \PY{n}{xnnz}\PY{p}{)} \PY{o}{+} \PY{n}{intercept}
+                        \PY{k}{if} \PY{n}{learning\PYZus{}rate} \PY{o}{==} \PY{n}{OPTIMAL}\PY{p}{:}
+                            \PY{n}{eta} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{/} \PY{p}{(}\PY{n}{alpha} \PY{o}{*} \PY{p}{(}\PY{n}{optimal\PYZus{}init} \PY{o}{+} \PY{n}{t} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+        
+                        \PY{k}{if} \PY{n}{verbose} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{:}
+                            \PY{n}{sumloss} \PY{o}{+}\PY{o}{=} \PY{n}{loss}\PY{o}{.}\PY{n}{loss}\PY{p}{(}\PY{n}{p}\PY{p}{,} \PY{n}{y}\PY{p}{)}
+        
+                        \PY{k}{if} \PY{n}{y} \PY{o}{\PYZgt{}} \PY{l+m+mf}{0.0}\PY{p}{:}
+                            \PY{n}{class\PYZus{}weight} \PY{o}{=} \PY{n}{weight\PYZus{}pos}
+                        \PY{k}{else}\PY{p}{:}
+                            \PY{n}{class\PYZus{}weight} \PY{o}{=} \PY{n}{weight\PYZus{}neg}
+        
+                        
+                        \PY{n}{dloss} \PY{o}{=} \PY{n}{loss}\PY{o}{.}\PY{n}{\PYZus{}dloss}\PY{p}{(}\PY{n}{p}\PY{p}{,} \PY{n}{y}\PY{p}{)}
+                        \PY{c+c1}{\PYZsh{} clip dloss with large values to avoid numerical}
+                        \PY{c+c1}{\PYZsh{} instabilities}
+                        \PY{k}{if} \PY{n}{dloss} \PY{o}{\PYZlt{}} \PY{o}{\PYZhy{}}\PY{n}{MAX\PYZus{}DLOSS}\PY{p}{:}
+                            \PY{n}{dloss} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{MAX\PYZus{}DLOSS}
+                        \PY{k}{elif} \PY{n}{dloss} \PY{o}{\PYZgt{}} \PY{n}{MAX\PYZus{}DLOSS}\PY{p}{:}
+                            \PY{n}{dloss} \PY{o}{=} \PY{n}{MAX\PYZus{}DLOSS}
+                            
+                        \PY{n}{update} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{eta} \PY{o}{*} \PY{n}{dloss}
+        
+                        \PY{n}{update} \PY{o}{*}\PY{o}{=} \PY{n}{class\PYZus{}weight} \PY{o}{*} \PY{n}{sample\PYZus{}weight}
+        
+                        \PY{k}{if} \PY{n}{penalty\PYZus{}type} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{n}{L2}\PY{p}{:}
+                            \PY{c+c1}{\PYZsh{} do not scale to negative values when eta or alpha are too}
+                            \PY{c+c1}{\PYZsh{} big: instead set the weights to zero}
+                            \PY{n}{w}\PY{o}{.}\PY{n}{scale}\PY{p}{(}\PY{n+nb}{max}\PY{p}{(}\PY{l+m+mi}{0}\PY{p}{,} \PY{l+m+mf}{1.0} \PY{o}{\PYZhy{}} \PY{p}{(}\PY{p}{(}\PY{l+m+mf}{1.0} \PY{o}{\PYZhy{}} \PY{n}{l1\PYZus{}ratio}\PY{p}{)} \PY{o}{*} \PY{n}{eta} \PY{o}{*} \PY{n}{alpha}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+                        \PY{k}{if} \PY{n}{update} \PY{o}{!=} \PY{l+m+mf}{0.0}\PY{p}{:}
+                            \PY{n}{w}\PY{o}{.}\PY{n}{add}\PY{p}{(}\PY{n}{x\PYZus{}data\PYZus{}ptr}\PY{p}{,} \PY{n}{x\PYZus{}ind\PYZus{}ptr}\PY{p}{,} \PY{n}{xnnz}\PY{p}{,} \PY{n}{update}\PY{p}{)}
+                            \PY{k}{if} \PY{n}{fit\PYZus{}intercept} \PY{o}{==} \PY{l+m+mi}{1}\PY{p}{:}
+                                \PY{n}{intercept} \PY{o}{+}\PY{o}{=} \PY{n}{update} \PY{o}{*} \PY{n}{intercept\PYZus{}decay}
+        
+        
+                        \PY{n}{t} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+                        \PY{n}{count} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+        
+                    \PY{c+c1}{\PYZsh{} report epoch information}
+                    \PY{k}{if} \PY{n}{verbose} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}\PY{p}{:}
+                        \PY{k}{with} \PY{n}{gil}\PY{p}{:}
+                            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Norm: }\PY{l+s+si}{\PYZpc{}.2f}\PY{l+s+s2}{, NNZs: }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{, }\PY{l+s+s2}{\PYZdq{}}
+                                  \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Bias: }\PY{l+s+si}{\PYZpc{}.6f}\PY{l+s+s2}{, T: }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{, Avg. loss: }\PY{l+s+si}{\PYZpc{}.6f}\PY{l+s+s2}{\PYZdq{}}
+                                  \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{w}\PY{o}{.}\PY{n}{norm}\PY{p}{(}\PY{p}{)}\PY{p}{,} \PY{n}{weights}\PY{o}{.}\PY{n}{nonzero}\PY{p}{(}\PY{p}{)}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,}
+                                     \PY{n}{intercept}\PY{p}{,} \PY{n}{count}\PY{p}{,} \PY{n}{sumloss} \PY{o}{/} \PY{n}{count}\PY{p}{)}\PY{p}{)}
+                            \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Total training time: }\PY{l+s+si}{\PYZpc{}.2f}\PY{l+s+s2}{ seconds.}\PY{l+s+s2}{\PYZdq{}}
+                                  \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{time}\PY{p}{(}\PY{p}{)} \PY{o}{\PYZhy{}} \PY{n}{t\PYZus{}start}\PY{p}{)}\PY{p}{)}
+        
+                    \PY{c+c1}{\PYZsh{} floating\PYZhy{}point under\PYZhy{}/overflow check.}
+                    \PY{k}{if} \PY{p}{(}\PY{o+ow}{not} \PY{n}{skl\PYZus{}isfinite}\PY{p}{(}\PY{n}{intercept}\PY{p}{)}
+                        \PY{o+ow}{or} \PY{n}{any\PYZus{}nonfinite}\PY{p}{(}\PY{o}{\PYZlt{}}\PY{n}{double} \PY{o}{*}\PY{o}{\PYZgt{}}\PY{n}{weights}\PY{o}{.}\PY{n}{data}\PY{p}{,} \PY{n}{n\PYZus{}features}\PY{p}{)}\PY{p}{)}\PY{p}{:}
+                        \PY{n}{infinity} \PY{o}{=} \PY{k+kc}{True}
+                        \PY{k}{break}
+        
+            \PY{k}{if} \PY{n}{infinity}\PY{p}{:}
+                \PY{k}{raise} \PY{n+ne}{ValueError}\PY{p}{(}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Floating\PYZhy{}point under\PYZhy{}/overflow occurred at epoch}\PY{l+s+s2}{\PYZdq{}}
+                                  \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ \PYZsh{}}\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{. Scaling input data with StandardScaler or}\PY{l+s+s2}{\PYZdq{}}
+                                  \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{ MinMaxScaler might help.}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{epoch} \PY{o}{+} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{)}
+        
+            \PY{n}{w}\PY{o}{.}\PY{n}{reset\PYZus{}wscale}\PY{p}{(}\PY{p}{)}
+        
+            \PY{k}{return} \PY{n}{weights}\PY{p}{,} \PY{n}{intercept}\PY{p}{,} \PY{n}{average\PYZus{}weights}\PY{p}{,} \PY{n}{average\PYZus{}intercept}
+\end{Verbatim}
+
+    Besides the performance benefits from ArrayDataSet and WeightVector, the
+Cython implementation has a few properties that further speeds it up.
+Nearly all variables are defined using cdef and static typing. The main
+part of the algorithm is done under with nogil.
+
+
+    % Add a bibliography block to the postdoc
+    
+    
+    
+    \end{document}
