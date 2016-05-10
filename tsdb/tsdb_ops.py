@@ -95,6 +95,16 @@ class TSDBOp_Select(TSDBOp):
     def from_json(cls, json_dict):
         return cls(json_dict['md'], json_dict['fields'], json_dict['additional'])
 
+class TSDBOp_SimsearchSAX(TSDBOp):
+
+    def __init__(self, arg):
+        super().__init__('sim_search_SAX')
+        self['arg'] = arg
+
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls(json_dict['arg'])
+
 class TSDBOp_AugmentedSelect(TSDBOp):
     """
     A hybrid of select, and add trigger, we only miss the onwhat key as this op

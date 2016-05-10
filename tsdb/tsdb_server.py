@@ -44,7 +44,11 @@ class TSDBProtocol(asyncio.Protocol):
         else:
             d = OrderedDict((k,{}) for k in loids)
             return TSDBOp_Return(TSDBStatus.OK, op['op'], d)
-
+        
+    def _sim_search_SAX(self, op):
+        "run a select and then synchronously run some computation on it"
+        pk = self.server.db.simsearch_SAX(op['arg'])
+        return TSDBOp_Return(TSDBStatus.OK, op['op'], pk)
 
     def _augmented_select(self, op):
         "run a select and then synchronously run some computation on it"
@@ -116,6 +120,8 @@ class TSDBProtocol(asyncio.Protocol):
                     response = self._upsert_meta(op)
                 elif isinstance(op, TSDBOp_Select):
                     response = self._select(op)
+                elif isinstance(op, TSDBOp_SimsearchSAX):
+                    response = self._sim_search_SAX(op)
                 elif isinstance(op, TSDBOp_AugmentedSelect):
                     response = self._augmented_select(op)
                 elif isinstance(op, TSDBOp_AddTrigger):

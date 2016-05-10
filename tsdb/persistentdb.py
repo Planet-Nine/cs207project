@@ -3,6 +3,9 @@ from operator import and_
 from functools import reduce
 import operator
 import numpy as np
+import gc
+import uuid
+from scipy.interpolate import interp1d
 import sys
 sys.path.insert(0, '../')   # This is sketchy AF but I'm not sure how else to do it
 from timeseries import TimeSeries
@@ -19,6 +22,16 @@ OPMAP = {
     '>=': operator.ge
 }
 
+Breakpoints = {}
+Breakpoints[2] = np.array([0.]) 
+Breakpoints[4] = np.array([-0.67449,0,0.67449]) 
+Breakpoints[8] = np.array([-1.1503,-0.67449,-0.31864,0,0.31864,0.67449,1.1503]) 
+Breakpoints[16] = np.array([-1.5341,-1.1503,-0.88715,-0.67449,-0.48878,-0.31864,-0.15731,0,0.15731,0.31864,0.48878,0.67449,0.88715,1.1503,1.5341]) 
+Breakpoints[32] = np.array([-1.8627,-1.5341,-1.318,-1.1503,-1.01,-0.88715,-0.77642,-0.67449,-0.57913,-0.48878,-0.40225,-0.31864,-0.2372,-0.15731,-0.078412,0,0.078412,0.15731,0.2372,0.31864,0.40225,0.48878,0.57913,0.67449,0.77642,0.88715,1.01,1.1503,1.318,1.5341,1.8627]) 
+Breakpoints[64] = np.array([-2.1539,-1.8627,-1.6759,-1.5341,-1.4178,-1.318,-1.2299,-1.1503,-1.0775,-1.01,-0.94678,-0.88715,-0.83051,-0.77642,-0.72451,-0.67449,-0.6261,-0.57913,-0.53341,-0.48878,-0.4451,-0.40225,-0.36013,-0.31864,-0.27769,-0.2372,-0.1971,-0.15731,-0.11777,-0.078412,-0.039176,0,0.039176,0.078412,0.11777,0.15731,0.1971,0.2372,0.27769,0.31864,0.36013,0.40225,0.4451,0.48878,0.53341,0.57913,0.6261,0.67449,0.72451,0.77642,0.83051,0.88715,0.94678,1.01,1.0775,1.1503,1.2299,1.318,1.4178,1.5341,1.6759,1.8627,2.1539]) 
+
+Breakpoints[128] = np.array([-2.4176,-2.1539,-1.9874,-1.8627,-1.7617,-1.6759,-1.601,-1.5341,-1.4735,-1.4178,-1.3662,-1.318,-1.2727,-1.2299,-1.1892,-1.1503,-1.1132,-1.0775,-1.0432,-1.01,-0.9779,-0.94678,-0.91656,-0.88715,-0.85848,-0.83051,-0.80317,-0.77642,-0.75022,-0.72451,-0.69928,-0.67449,-0.6501,-0.6261,-0.60245,-0.57913,-0.55613,-0.53341,-0.51097,-0.48878,-0.46683,-0.4451,-0.42358,-0.40225,-0.38111,-0.36013,-0.33931,-0.31864,-0.2981,-0.27769,-0.25739,-0.2372,-0.21711,-0.1971,-0.17717,-0.15731,-0.13751,-0.11777,-0.098072,-0.078412,-0.058783,-0.039176,-0.019584,0,0.019584,0.039176,0.058783,0.078412,0.098072,0.11777,0.13751,0.15731,0.17717,0.1971,0.21711,0.2372,0.25739,0.27769,0.2981,0.31864,0.33931,0.36013,0.38111,0.40225,0.42358,0.4451,0.46683,0.48878,0.51097,0.53341,0.55613,0.57913,0.60245,0.6261,0.6501,0.67449,0.69928,0.72451,0.75022,0.77642,0.80317,0.83051,0.85848,0.88715,0.91656,0.94678,0.9779,1.01,1.0432,1.0775,1.1132,1.1503,1.1892,1.2299,1.2727,1.318,1.3662,1.4178,1.4735,1.5341,1.601,1.6759,1.7617,1.8627,1.9874,2.1539,2.4176])
+                             
 def metafiltered(d, schema, fieldswanted):
     d2 = {}
     if len(fieldswanted) == 0:
@@ -94,10 +107,13 @@ class PersistentDB:
         # Assign attributes according to schema
         self.indexes = {}
         self.rows = {}
+        self.rows_SAX = {}
+        self.SAX_tree = BinarySearchTree(None)
         self.schema = schema
         self.dbname = dbname
         self.pkfield = pkfield
         self.tslen = None
+        self.tslen_SAX = 256
         self.overwrite = overwrite
         self.dist = dist
         self.vps = []
@@ -127,6 +143,16 @@ class PersistentDB:
                                     self.rows[pk][field] = True
                             else:
                                 self.rows[pk][field] = self.schema[field]['type'](val)
+                        if pk not in self.rows_SAX:
+                            self.rows_SAX[pk] = {pkfield:pk}
+                        else:
+                            if self.schema[field]['type'] == bool:
+                                if val == 'False': 
+                                    self.rows_SAX[pk][field] = False
+                                else:
+                                    self.rows_SAX[pk][field] = True
+                            else:
+                                self.rows_SAX[pk][field] = self.schema[field]['type'](val)
                         if field == 'vp' and val == 'True':
                             self.vps.append(pk)
                             self.indexes['d_vp-'+pk] = defaultdict(set)
@@ -134,6 +160,7 @@ class PersistentDB:
                         if 'vp' in schema and self.rows[pk]['vp'] == True:
                             self.del_vp(pk)
                         del self.rows[pk]
+                        del self.rows_SAX[pk]
                     elif field[:5] == 'd_vp-':
                         self.rows[pk][field] = float(val)
                     else:
@@ -144,6 +171,9 @@ class PersistentDB:
                 for pk in self.rows:
                     tsarray = np.load(self.dbname+"_ts/"+pk+"_ts.npy")
                     self.rows[pk]['ts'] = TimeSeries(tsarray[0,:], tsarray[1,:])
+                    self.tslen = tsarray.shape[1]
+                    tsarray = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
+                    self.rows_SAX[pk]['ts'] = TimeSeries(tsarray[0,:], tsarray[1,:])
                     self.tslen = tsarray.shape[1]
 
                 self.index_bulk(list(self.rows.keys()))
@@ -167,6 +197,10 @@ class PersistentDB:
             self.rows[pk] = {self.pkfield:pk}
         else:
             raise ValueError('Duplicate primary key found during insert')
+        if pk not in self.rows_SAX:
+            self.rows_SAX[pk] = {self.pkfield:pk}
+        else:
+            raise ValueError('Duplicate primary key found during insert')
 
         # Save timeseries as a 2d numpy array
         if self.tslen is None:
@@ -176,6 +210,14 @@ class PersistentDB:
         if not os.path.exists(self.dbname+"_ts"):
             os.makedirs(self.dbname+"_ts")
         np.save(self.dbname+"_ts/"+pk+"_ts.npy", np.vstack((ts.time, ts.data)))
+        
+        x1 = np.linspace(min(ts.time),max(ts.time), self.tslen_SAX)
+        ts_SAX_data = interp1d(ts.time, ts.data)(x1)
+        ts_SAX_time = x1
+        ts_SAX = TimeSeries(ts_SAX_time,ts_SAX_data)
+        if not os.path.exists(self.dbname+"_ts_SAX"):
+            os.makedirs(self.dbname+"_ts_SAX")
+        np.save(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy", np.vstack((ts_SAX.time, ts_SAX.data)))
 
         # Save a record in the database file
         if self.overwrite or not os.path.exists(self.dbname):
@@ -192,11 +234,56 @@ class PersistentDB:
         if 'vp' in self.schema:
             self.rows[pk]['vp'] = False
 
+        self.rows_SAX[pk]['ts'] = ts_SAX  
+        if 'vp' in self.schema:
+            self.rows_SAX[pk]['vp'] = False
+
         for vp in self.vps:
             ts1 = self.rows[vp]['ts']
             self.upsert_meta(pk, {'d_vp-'+vp : self.dist(ts1,ts)})
 
         self.update_indices(pk)
+
+        FBL[] // array of FBL buffers
+LBL[] // array of LBL buffers
+Function Bulk_Insert()
+while ( more time series to index )
+ ts_new = next time series to be indexed
+ iSAX_word = iSAX representation of ts_new
+ if ( main memory still available )
+ if ( no FBL buffer contains iSAX_word)
+ create new FBL buffer corresponding to iSAX_word
+ add ts_new to FBL[]
+ else if ( main memory is full )
+ for each buf in FBL[]
+ for each ts in buf
+ call function Insert(ts)
+ flush LBL buffers created during insertion (corresponding to buf)
+ remove from memory those LBL buffers
+-----------------------------------------------------------------------------------
+Function Insert(ts_new)
+ iSAX_word = iSAX representation of ts_new
+ if (subtree corresponding to iSAX_word exists )
+ // current node has a child node to receive ts_new
+ n = destination node of ts_new // route ts_new down the tree
+ if ( n is leaf node )
+ if ( n not full ) // node does not need to be split
+ add ts_new into LBL[n] // buffer corresponding to n
+ else // node n needs to be split
+ for each ts in n
+ // read all time series of n (from disk)
+ add ts to LBL[n]
+ n_new = new internal node
+ for each ts in LBL[n]
+ n_new.Insert( ts)
+ n_new.Insert(ts_new)
+ remove n // all time series moved under n_new
+ else if ( n is internal node )
+ n.Insert(ts_new)
+ else // current node does not have a child node to receive ts_new
+ n_new_leaf = new leaf node
+ create new LBL buffer corresponding to n_new_leaf
+ add ts_new to this new LBL buffer
 
     def delete_ts(self, pk):
         if pk in self.rows:
@@ -206,7 +293,12 @@ class PersistentDB:
             fd = open(self.dbname, 'a')
             fd.write(pk+':DELETE:0\n')
             fd.close()
-        
+        if pk in self.rows_SAX:
+            if self.rows_SAX[pk]['vp'] == True:
+                self.del_vp(pk)
+            del self.rows_SAX[pk]
+            
+         
     def upsert_meta(self, pk, meta):
         if isinstance(meta, dict) == False:
             raise ValueError('Metadata should be in the form of a dictionary')
@@ -285,6 +377,11 @@ class PersistentDB:
         self.vps.remove(vp)
         del self.indexes['d_vp-'+vp]
 
+    def simsearch_SAX(self, ts):
+        
+        if not isinstance(ts, TimeSeries):
+            raise ValueError("Input must be a TimeSeries object")
+        
     def simsearch(self, ts):
         """ Search over all timeseries in the database and return the primary key 
           of the object which is closest """
@@ -319,13 +416,24 @@ class PersistentDB:
     def index_bulk(self, pks=[]):
         if len(pks) == 0:
             pks = self.rows
+            pks_SAX = self.rows_SAX
         for pkid in pks:
             self.update_indices(pkid)
-
+         
     # Update to tree structure
     def update_indices(self, pk):
         row = self.rows[pk]
+        row_SAX = []
+        try:
+            row_SAX = self.rows_SAX[pk]
+        except:
+            pass
         for field in row:
+            v = row[field]
+            if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
+                idx = self.indexes[field]
+                idx[v].add(pk)
+        for field in row_SAX:
             v = row[field]
             if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
                 idx = self.indexes[field]
@@ -427,3 +535,354 @@ class PersistentDB:
             return pks, matchfields
         else:
             return pks[:limit], matchfields[:limit]
+
+class BinaryTree:
+    def __init__(self, rep=None, parent=None,threshold = 10,wordlength = 16):
+        self.SAX = rep
+        self.parent = parent
+        self.ts = []
+        self.ts_SAX = []
+        self.th = threshold
+        self.num = 0
+        self.splitting_index = 0 
+        self.word_length = wordlength
+        self.online_mean = np.zeros(self.word_length)
+        self.online_stdev = np.zeros(self.word_length)
+        self.dev_accum = np.zeros(self.word_length)
+        self.left = None
+        self.right = None    
+            
+    def addLeftChild(self, rep,threshold,wordlength): 
+        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        self.left = n
+        return n
+        
+    def addRightChild(self, rep,threshold,wordlength):
+        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        self.right = n
+        return n
+        
+    def hasLeftChild(self):
+        return self.left is not None
+
+    def hasRightChild(self):
+        return self.right is not None
+
+    def hasAnyChild(self):
+        return self.hasRightChild() or self.hasLeftChild()
+
+    def hasBothChildren(self):
+        return self.hasRightChild() and self.hasLeftChild()
+    
+    def hasNoChildren(self):
+        return not self.hasRightChild() and not self.hasLeftChild()
+    
+    def isLeftChild(self):
+        return self.parent and self.parent.left == self
+
+    def isRightChild(self):
+        return self.parent and self.parent.right == self
+
+    def isRoot(self):
+        return not self.parent
+
+    def isLeaf(self):
+        return not (self.right or self.left)
+    
+            
+    def preorder(self):
+        if self.isLeftChild():
+            yield (self.parent, self, "left")
+        elif self.isRightChild():
+            yield (self.parent, self, "right")
+        if self.hasLeftChild():
+            for v in self.left.preorder():
+                yield v
+        if self.hasRightChild():
+            for v in self.right.preorder():
+                yield v
+                
+class BinarySearchTree(BinaryTree):
+        
+    def __init__(self, rep=None, parent=None, threshold = 10, wordlength = 16):
+        super().__init__(rep, parent,threshold,wordlength)
+        self.count = 1
+
+    def _insert_hook(self):
+        pass
+            
+    def insert(self, rep):
+        if rep < self.SAX:
+            if self.hasLeftChild():
+                self.left.insert(rep)
+            else:
+                self.addLeftChild(data)
+                self._insert_hook()
+        elif data > self.data:
+            if self.hasRightChild():
+                self.right.insert(data)
+            else:
+                self.addRightChild(data)
+                self._insert_hook()
+        else: #duplicate value
+            self.count += 1
+            self._insert_hook()
+            
+    def search(self, data):
+        if self.data == data:
+            return self
+        elif data < self.data and self.left:
+            return self.left.search(data)
+        elif data > self.data and self.right:
+            return self.right.search(data)
+        else:
+            return None
+        
+    def delete(self, data):        
+        if self.isRoot() and self.hasNoChildren() and self.data==data:#deleting the whole tree
+            #self.root=None#todo call a destructor that signals GC it can reap
+            self = None
+            #self._update_sizes(up=False) #really tree is gone
+            self._remove_hook()
+            gc.collect()
+        elif self.hasAnyChild():
+            noder = self.search(data)
+            if noder:
+                self._remove(noder)
+                gc.collect()
+            else:
+                raise ValueError("No such data {} in tree".format(data))
+        else:
+            raise ValueError("No such data {} in tree".format(data))
+
+    def _remove_hook(self, up=False, by=1):
+        pass
+    
+    def _remove(self, node):
+        if node.isLeaf():
+            if node.isLeftChild():
+                node.parent.left = None
+            elif node.isRightChild():
+                node.parent.right = None
+            #node._update_sizes(up=False, by=node.count)
+            node._remove_hook(by=node.count)
+            del node
+        elif node.hasBothChildren():
+            s = node.successor()
+            #successor is guaranteed to have right child only
+            s.spliceOut()
+            #s._update_sizes(up=False, by=s.count)
+            s._remove_hook(by=s.count)
+            #handled more generally above
+            #s.right.parent = s.parent
+            #s.parent.left = s.right
+            node.data = s.data
+            try:
+                node.value = s.value
+            except:
+                pass
+            #diff = s.count - node.count            
+            #node._update_sizes(by=diff)
+            node._remove_hook(up=True, by = s.count - node.count)
+            node.count = s.count
+            del s #the node became the successor
+        else: # one child case
+            if node.hasLeftChild():
+                if node.isLeftChild():
+                    node.left.parent = node.parent
+                    node.parent.left = node.left
+                elif node.isRightChild():
+                    node.left.parent = node.parent
+                    node.parent.right = node.left
+                else: #root
+                    self.root = node.left
+                #node._update_sizes(up=False, by=node.count)
+                node._remove_hook(by=node.count)
+                del node.parent
+            else:
+                if node.isLeftChild():
+                    node.right.parent = node.parent
+                    node.parent.left = node.right
+                elif node.isRightChild():
+                    node.right.parent = node.parent
+                    node.parent.right = node.right
+                else: #root
+                    self.root = node.right
+                #node._update_sizes(up=False, by=node.count)
+                node._remove_hook(by=node.count)
+                del node.parent
+                    
+    def findMin(self):
+        minnode = self
+        while minnode.hasLeftChild():
+            minnode = minnode.left
+        return minnode
+    
+    def findMax(self):
+        maxnode = self
+        while maxnode.hasRightChild():
+            maxnode = maxnode.right
+        return maxnode
+    
+    def successor(self):
+        s = None
+        if self.hasRightChild():
+            s = self.right.findMin()
+        else:
+            if self.parent:
+                if self.isLeftChild():
+                    s = self.parent
+                else:
+                    self.parent.right=None
+                    s = self.parent.successor()
+                    self.parent.right=self
+        return s
+    
+    def predecessor(self):
+        p=None
+        if self.hasLeftChild():
+            p = self.left.findMax()
+        else:
+            if self.parent:
+                if self.isRightChild():
+                    p = self.parent
+                else:
+                    self.parent.left = None
+                    p = self.parent.predecessor()
+                    self.parent.left = self
+        return p
+            
+    def spliceOut(self):
+        if self.isLeaf():
+            if self.isLeftChild():
+                self.parent.left = None
+            else:
+                self.parent.right = None
+        elif self.hasAnyChild():
+            if self.hasLeftChild():
+                if self.isLeftChild():
+                    self.parent.left = self.left
+                else:
+                    self.parent.right = self.left
+                self.left.parent = self.parent
+            else:
+                if self.isLeftChild():
+                    self.parent.left = self.right
+                else:
+                    self.parent.right = self.right
+                self.right.parent = self.parent
+       
+    def word2number(self,word):
+        number = []
+        for j in word:
+            l = len(j)
+            length = 2**l
+            for t in sorted(Breakpoints.keys()):
+                if length < t:
+                    key = t
+            num = int(j,2)
+            ind = 2*num
+            number += [Breakpoints[key][ind]]
+        return np.array(number)
+    
+    def mean_std_calculator(self,word):
+        self.num += 1
+        mu_1 = self.online_mean
+        value = self.word2number(word)
+        delta = value - self.online_mean
+        self.online_mean = self.online_mean + delta/self.num
+        prod = (value-self.online_mean)*(value-mu_1)
+        self.dev_accum = self.dev_accum + prod
+        if self.num > 1:
+            self.online_stdev = np.sqrt(self.dev_accum/(self.num-1))
+    
+    def getBreakPoint(self,s):
+        l = len(s)
+        length = 2**l
+        for t in sorted(Breakpoints.keys()):
+            if length < t:
+                key = t
+        num = int(s,2)
+        ind = 2*num
+        return Breakpoints[key][ind]
+    
+    def split(self):
+        segmentToSplit = None
+        if self.SAX is not None:
+            for i,s in enumerate(self.SAX):
+                b = self.getBreakPoint(s)         
+                diff = None
+                if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]
+                    if diff is None or np.abs(self.online_mean[i] - b) < diff:
+                        segmentToSplit = i
+                        diff = np.abs(self.online_mean[i] - b)
+                    
+            self.IncreaseCardinality(i)
+    
+    def IncreaseCardinality(self, segment):
+        if self.SAX is None:
+            raise ValueError('Cannot increase cardinality of root node.')
+        newSAXupper = self.SAX
+        newSAXupper[segment] = newSAXupper[segment]+'1'
+        newSAXlower = self.SAX
+        newSAXlower[segment] = newSAXlower[segment]+'0'
+        newtsuppper = []
+        newtslower = []
+        newts_SAXupper = []
+        newts_SAXlower = []
+        l = len(newSAXupper[segment])
+        for i,word in enumerate(self.ts_SAX):
+            if word[segment][l-1] == '1':
+                newts_SAXupper += [word]
+                newtsupper += [self.ts[i]]
+            else:
+                newts_SAXlower += [word]
+                newtslower += [self.ts[i]]
+        
+        self.addLeftChild(rep=newSAXlower,threshold=self.th, wordlength=self.word_length)
+        self.addRightChild(rep=newSAXupper,threshold=self.th, wordlength=self.word_length)
+        for word in newts_SAXupper:
+            self.right.mean_std_calculator(word)
+        self.right.ts = newtsuppper
+        self.right.ts_SAX = newts_SAXupper
+        for word in newts_SAXlower:
+            self.left.mean_std_calculator(word)
+        self.left.ts = newtslower
+        self.left.ts_SAX = newts_SAXlower
+        self.ts = []
+        self.ts_SAX = []
+        self.num = 0
+        self.online_mean = None
+        self.online_stdev = None
+        self.dev_accum = None
+        self.splitting_index = segment
+        
+        
+    def __iter__(self):
+        if self is not None:
+            if self.hasLeftChild():
+                for node in self.left:
+                    yield node
+            for _ in range(self.count):
+                yield self
+            if self.hasRightChild():
+                for node in self.right:
+                    yield node
+                    
+    def __len__(self):#expensive O(n) version
+        start=0
+        for node in self:
+            start += 1
+        return start
+    
+    def __getitem__(self, i):
+        return self.ithorder(i+1)
+    
+    def __contains__(self, data):
+        return self.search(data) is not None
+
+class Tree_Initializer():
+    def __init__(self, threshold = 10, wordlength = 16):
+        self.tree = BinarySearchTree(threshold=threshold, wordlength=wordlength)
+        
+    

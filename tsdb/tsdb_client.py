@@ -19,6 +19,12 @@ class TSDBClient(object):
         print("C> upsert msg", msg)
         return self._send(msg)
 
+    def sim_search_SAX(self, arg):
+        #your code here
+        msg = TSDBOp_SimsearchSAX(arg).to_json()
+        print("C> select msg", msg)
+        return self._send(msg)
+    
     def select(self, metadata_dict={}, fields=None, additional=None):
         #your code here
         msg = TSDBOp_Select(metadata_dict, fields,additional).to_json()
