@@ -47,7 +47,7 @@ def metafiltered(d, schema, fieldswanted):
 class PersistentDB:
     "Database implementation with a local dictionary, which saves all necessary data to files for later use"
 
-    def __init__(self, schema, pkfield, load=False, dbname="db", overwrite=False, dist=procs.corr_indb):
+    def __init__(self, schema, pkfield, load=False, dbname="db", overwrite=False, dist=procs.corr_indb, threshold = 10, wordlength = 16, tslen = 256, cardinality = 64):
         """
         Parameters
         ----------
@@ -80,6 +80,30 @@ class PersistentDB:
         # ---- Validating input ---- #
         if not isinstance(pkfield, str):
             raise ValueError("Field name must be of type str")
+        if not isinstance(threshold, int):
+            raise ValueError("Threshold must be of type int")
+        if not isinstance(wordlength, int):
+            raise ValueError("Word length must be of type int")
+        if threshold <= 0:
+            raise ValueError("Threshold must be greater than zero")
+        if wordlength <= 0:
+            raise ValueError("Word length must be greater than zero")
+        if '{0:b}'.format(wordlength)[-1] != '0':
+            raise ValueError("Word length must be a power of two")
+        if not isinstance(tslen, int):
+            raise ValueError("TimeSeries length must be of type int")
+        if tslen < wordlength:
+            raise ValueError("TimeSeries length must be greater than or equal to the word length")
+        if '{0:b}'.format(tslen)[-1] != '0':
+            raise ValueError("TimeSeries length must be a power of two")
+        if not isinstance(cardinality, int):
+            raise ValueError("Cardinality must be of type int")
+        if cardinality <= 0:
+            raise ValueError("Cardinality must be greater than zero")
+        if '{0:b}'.format(cardinality)[-1] != '0':
+            raise ValueError("Cardinality must be a power of two")
+        if cardinality > 64:
+            raise ValueError("Cardinalities greater than 64 are not supported")    
         if not isinstance(load, bool):
             raise ValueError("Load must be of type bool")
         if not isinstance(dbname, str):
@@ -108,12 +132,15 @@ class PersistentDB:
         self.indexes = {}
         self.rows = {}
         self.rows_SAX = {}
-        self.SAX_tree = BinarySearchTree(None)
+        self.wordlength = wordlength
+        self.threshold = threshold
+        self.SAX_tree = Tree_Initializer(threshold = threshold, wordlength = wordlength).tree    
+        self.card = cardinality
         self.schema = schema
         self.dbname = dbname
         self.pkfield = pkfield
         self.tslen = None
-        self.tslen_SAX = 256
+        self.tslen_SAX = tslen
         self.overwrite = overwrite
         self.dist = dist
         self.vps = []
@@ -235,6 +262,8 @@ class PersistentDB:
             self.rows[pk]['vp'] = False
 
         self.rows_SAX[pk]['ts'] = ts_SAX  
+        rep = procs.isax_indb(ts_SAX,self.card,self.wordlength)
+        self.SAX_tree.insert(pk, rep)
         if 'vp' in self.schema:
             self.rows_SAX[pk]['vp'] = False
 
@@ -244,46 +273,6 @@ class PersistentDB:
 
         self.update_indices(pk)
 
-        FBL[] // array of FBL buffers
-LBL[] // array of LBL buffers
-Function Bulk_Insert()
-while ( more time series to index )
- ts_new = next time series to be indexed
- iSAX_word = iSAX representation of ts_new
- if ( main memory still available )
- if ( no FBL buffer contains iSAX_word)
- create new FBL buffer corresponding to iSAX_word
- add ts_new to FBL[]
- else if ( main memory is full )
- for each buf in FBL[]
- for each ts in buf
- call function Insert(ts)
- flush LBL buffers created during insertion (corresponding to buf)
- remove from memory those LBL buffers
------------------------------------------------------------------------------------
-Function Insert(ts_new)
- iSAX_word = iSAX representation of ts_new
- if (subtree corresponding to iSAX_word exists )
- // current node has a child node to receive ts_new
- n = destination node of ts_new // route ts_new down the tree
- if ( n is leaf node )
- if ( n not full ) // node does not need to be split
- add ts_new into LBL[n] // buffer corresponding to n
- else // node n needs to be split
- for each ts in n
- // read all time series of n (from disk)
- add ts to LBL[n]
- n_new = new internal node
- for each ts in LBL[n]
- n_new.Insert( ts)
- n_new.Insert(ts_new)
- remove n // all time series moved under n_new
- else if ( n is internal node )
- n.Insert(ts_new)
- else // current node does not have a child node to receive ts_new
- n_new_leaf = new leaf node
- create new LBL buffer corresponding to n_new_leaf
- add ts_new to this new LBL buffer
 
     def delete_ts(self, pk):
         if pk in self.rows:
@@ -296,6 +285,8 @@ Function Insert(ts_new)
         if pk in self.rows_SAX:
             if self.rows_SAX[pk]['vp'] == True:
                 self.del_vp(pk)
+            rep = procs.isax_indb(self.rows_SAX[pk]['ts'],self.card,self.wordlength)
+            self.SAX_tree.delete(rep,pk)
             del self.rows_SAX[pk]
             
          
@@ -378,9 +369,18 @@ Function Insert(ts_new)
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
-        
         if not isinstance(ts, TimeSeries):
             raise ValueError("Input must be a TimeSeries object")
+        rep = procs.isax_indb(ts,self.card,self.wordlength)
+        n = self.SAX_tree.search(rep)
+        closestpk = None
+        pkdist = None
+        for pk in n.ts:
+            thisdist = self.dist(ts, self.rows[pk]['ts'])
+            if pkdist is None or thisdist < pkdist:
+                closestpk = pk
+                pkdist = thisdist
+        return closestpk
         
     def simsearch(self, ts):
         """ Search over all timeseries in the database and return the primary key 
@@ -416,7 +416,6 @@ Function Insert(ts_new)
     def index_bulk(self, pks=[]):
         if len(pks) == 0:
             pks = self.rows
-            pks_SAX = self.rows_SAX
         for pkid in pks:
             self.update_indices(pkid)
          
@@ -542,8 +541,9 @@ class BinaryTree:
         self.parent = parent
         self.ts = []
         self.ts_SAX = []
+        self.children = []
         self.th = threshold
-        self.num = 0
+        self.count = 0
         self.splitting_index = 0 
         self.word_length = wordlength
         self.online_mean = np.zeros(self.word_length)
@@ -562,6 +562,11 @@ class BinaryTree:
         self.right = n
         return n
         
+    def addChild(self, rep,threshold,wordlength):
+        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        self.children += [n]
+        return n
+    
     def hasLeftChild(self):
         return self.left is not None
 
@@ -589,188 +594,85 @@ class BinaryTree:
     def isLeaf(self):
         return not (self.right or self.left)
     
-            
-    def preorder(self):
-        if self.isLeftChild():
-            yield (self.parent, self, "left")
-        elif self.isRightChild():
-            yield (self.parent, self, "right")
-        if self.hasLeftChild():
-            for v in self.left.preorder():
-                yield v
-        if self.hasRightChild():
-            for v in self.right.preorder():
-                yield v
                 
 class BinarySearchTree(BinaryTree):
         
     def __init__(self, rep=None, parent=None, threshold = 10, wordlength = 16):
         super().__init__(rep, parent,threshold,wordlength)
-        self.count = 1
-
+        
     def _insert_hook(self):
         pass
             
-    def insert(self, rep):
-        if rep < self.SAX:
-            if self.hasLeftChild():
-                self.left.insert(rep)
-            else:
-                self.addLeftChild(data)
-                self._insert_hook()
-        elif data > self.data:
-            if self.hasRightChild():
-                self.right.insert(data)
-            else:
-                self.addRightChild(data)
-                self._insert_hook()
-        else: #duplicate value
-            self.count += 1
-            self._insert_hook()
-            
-    def search(self, data):
-        if self.data == data:
-            return self
-        elif data < self.data and self.left:
-            return self.left.search(data)
-        elif data > self.data and self.right:
-            return self.right.search(data)
+    def insert(self, pk,rep):
+        if self.isRoot():
+            index = 0
+            for i,symbol in enumerate(rep):
+                if symbol[0] == '1':
+                    index += 2**(self.word_length-i-1)
+            self.children[index].insert(pk,rep)
+        elif self.isLeaf() and self.count < self.th:
+            self.ts += [pk]
+            self.ts_SAX += [rep]
+            self.mean_std_calculator(rep)
+        elif self.isLeaf():
+            self.ts += [pk]
+            self.ts_SAX += [rep]
+            self.mean_std_calculator(rep)
+            self.split()
         else:
-            return None
+            l = len(self.left.SAX[self.splitting_index])
+            if rep[self.splitting_index][l-1] == '1':
+                self.right.insert(pk,rep)
+            else:
+                self.left.insert(pk,rep)
+            
+    def search(self, rep, pk = None):
+        if pk is not None:
+            if self.isRoot():
+                index = 0
+                for i,symbol in enumerate(rep):
+                    if symbol[0] == '1':
+                        index += 2**(self.word_length-i-1)
+                self.children[index].search(rep,pk)
+            elif self.isLeaf():
+                if pk in self.ts:
+                    return self
+                else:
+                    raise ValueError('"{}" not found'.format(pk))
+            else:
+                l = len(self.left.SAX[self.splitting_index])
+                if rep[self.splitting_index][l-1] == '1':
+                    self.right.search(rep,pk)
+                else:
+                    self.left.search(rep,pk)
+        else:
+            if self.isRoot():
+                index = 0
+                for i,symbol in enumerate(rep):
+                    if symbol[0] == '1':
+                        index += 2**(self.word_length-i-1)
+                self.children[index].search(rep)
+            elif self.isLeaf():
+                return self
+            else:
+                l = len(self.left.SAX[self.splitting_index])
+                if rep[self.splitting_index][l-1] == '1':
+                    self.right.search(rep)
+                else:
+                    self.left.search(rep)
         
-    def delete(self, data):        
-        if self.isRoot() and self.hasNoChildren() and self.data==data:#deleting the whole tree
-            #self.root=None#todo call a destructor that signals GC it can reap
-            self = None
-            #self._update_sizes(up=False) #really tree is gone
-            self._remove_hook()
-            gc.collect()
-        elif self.hasAnyChild():
-            noder = self.search(data)
-            if noder:
-                self._remove(noder)
-                gc.collect()
-            else:
-                raise ValueError("No such data {} in tree".format(data))
-        else:
-            raise ValueError("No such data {} in tree".format(data))
-
-    def _remove_hook(self, up=False, by=1):
-        pass
-    
-    def _remove(self, node):
-        if node.isLeaf():
-            if node.isLeftChild():
-                node.parent.left = None
-            elif node.isRightChild():
-                node.parent.right = None
-            #node._update_sizes(up=False, by=node.count)
-            node._remove_hook(by=node.count)
-            del node
-        elif node.hasBothChildren():
-            s = node.successor()
-            #successor is guaranteed to have right child only
-            s.spliceOut()
-            #s._update_sizes(up=False, by=s.count)
-            s._remove_hook(by=s.count)
-            #handled more generally above
-            #s.right.parent = s.parent
-            #s.parent.left = s.right
-            node.data = s.data
-            try:
-                node.value = s.value
-            except:
-                pass
-            #diff = s.count - node.count            
-            #node._update_sizes(by=diff)
-            node._remove_hook(up=True, by = s.count - node.count)
-            node.count = s.count
-            del s #the node became the successor
-        else: # one child case
-            if node.hasLeftChild():
-                if node.isLeftChild():
-                    node.left.parent = node.parent
-                    node.parent.left = node.left
-                elif node.isRightChild():
-                    node.left.parent = node.parent
-                    node.parent.right = node.left
-                else: #root
-                    self.root = node.left
-                #node._update_sizes(up=False, by=node.count)
-                node._remove_hook(by=node.count)
-                del node.parent
-            else:
-                if node.isLeftChild():
-                    node.right.parent = node.parent
-                    node.parent.left = node.right
-                elif node.isRightChild():
-                    node.right.parent = node.parent
-                    node.parent.right = node.right
-                else: #root
-                    self.root = node.right
-                #node._update_sizes(up=False, by=node.count)
-                node._remove_hook(by=node.count)
-                del node.parent
-                    
-    def findMin(self):
-        minnode = self
-        while minnode.hasLeftChild():
-            minnode = minnode.left
-        return minnode
-    
-    def findMax(self):
-        maxnode = self
-        while maxnode.hasRightChild():
-            maxnode = maxnode.right
-        return maxnode
-    
-    def successor(self):
-        s = None
-        if self.hasRightChild():
-            s = self.right.findMin()
-        else:
-            if self.parent:
-                if self.isLeftChild():
-                    s = self.parent
-                else:
-                    self.parent.right=None
-                    s = self.parent.successor()
-                    self.parent.right=self
-        return s
-    
-    def predecessor(self):
-        p=None
-        if self.hasLeftChild():
-            p = self.left.findMax()
-        else:
-            if self.parent:
-                if self.isRightChild():
-                    p = self.parent
-                else:
-                    self.parent.left = None
-                    p = self.parent.predecessor()
-                    self.parent.left = self
-        return p
-            
-    def spliceOut(self):
-        if self.isLeaf():
-            if self.isLeftChild():
-                self.parent.left = None
-            else:
-                self.parent.right = None
-        elif self.hasAnyChild():
-            if self.hasLeftChild():
-                if self.isLeftChild():
-                    self.parent.left = self.left
-                else:
-                    self.parent.right = self.left
-                self.left.parent = self.parent
-            else:
-                if self.isLeftChild():
-                    self.parent.left = self.right
-                else:
-                    self.parent.right = self.right
-                self.right.parent = self.parent
+    def delete(self, rep, pk):        
+        n = self.search(rep,pk)
+        index = n.ts.index(pk)
+        n.ts.remove(pk)
+        n.ts_SAX = n.ts_SAX[:index]+n.ts_SAX[index+1:]
+        n.online_mean = np.zeros(self.word_length)
+        n.online_stdev = np.zeros(self.word_length)
+        n.dev_accum = np.zeros(self.word_length)
+        n.count = 0
+        for word in n.ts_SAX:
+            n.mean_std_calculator(word)
+        
        
     def word2number(self,word):
         number = []
@@ -786,15 +688,15 @@ class BinarySearchTree(BinaryTree):
         return np.array(number)
     
     def mean_std_calculator(self,word):
-        self.num += 1
+        self.count += 1
         mu_1 = self.online_mean
         value = self.word2number(word)
         delta = value - self.online_mean
-        self.online_mean = self.online_mean + delta/self.num
+        self.online_mean = self.online_mean + delta/self.count
         prod = (value-self.online_mean)*(value-mu_1)
         self.dev_accum = self.dev_accum + prod
-        if self.num > 1:
-            self.online_stdev = np.sqrt(self.dev_accum/(self.num-1))
+        if self.count > 1:
+            self.online_stdev = np.sqrt(self.dev_accum/(self.count-1))
     
     def getBreakPoint(self,s):
         l = len(s)
@@ -821,7 +723,7 @@ class BinarySearchTree(BinaryTree):
     
     def IncreaseCardinality(self, segment):
         if self.SAX is None:
-            raise ValueError('Cannot increase cardinality of root node.')
+            raise ValueError('Cannot increase cardinality of root node')
         newSAXupper = self.SAX
         newSAXupper[segment] = newSAXupper[segment]+'1'
         newSAXlower = self.SAX
@@ -851,7 +753,7 @@ class BinarySearchTree(BinaryTree):
         self.left.ts_SAX = newts_SAXlower
         self.ts = []
         self.ts_SAX = []
-        self.num = 0
+        self.count = 0
         self.online_mean = None
         self.online_stdev = None
         self.dev_accum = None
@@ -884,5 +786,8 @@ class BinarySearchTree(BinaryTree):
 class Tree_Initializer():
     def __init__(self, threshold = 10, wordlength = 16):
         self.tree = BinarySearchTree(threshold=threshold, wordlength=wordlength)
+        words = [list('{0:b}'.format(i).zfill(int(np.log(2**wordlength-1)/np.log(2))+1)) for i in range(2**wordlength)]
+        for i in range(2**wordlength):
+            self.tree.addChild(words[i],threshold,wordlength)
         
     
