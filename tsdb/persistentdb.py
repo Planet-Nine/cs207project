@@ -370,6 +370,8 @@ class PersistentDB:
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
+        if isinstance(ts,TimeSeries):
+            ts = [ts.time,ts.data]
         x1 = np.linspace(min(ts[0]),max(ts[0]), self.tslen_SAX)
         ts_SAX_data = interp1d(ts[0], ts[1])(x1)
         ts_SAX_time = x1
