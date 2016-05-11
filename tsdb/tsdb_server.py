@@ -142,9 +142,9 @@ class TSDBProtocol(asyncio.Protocol):
                     response = self._insert_ts(op)
                 elif isinstance(op, TSDBOp_DeleteTS):
                     response = self._delete_ts(op)
-                 elif isinstance(op, TSDBOp_AddVP):
+                elif isinstance(op, TSDBOp_AddVP):
                     response = self._add_vp(op)
-                 elif isinstance(op, TSDBOp_SimSearch):
+                elif isinstance(op, TSDBOp_SimSearch):
                     response = self._simsearch(op)
                 elif isinstance(op, TSDBOp_UpsertMeta):
                     response = self._upsert_meta(op)
