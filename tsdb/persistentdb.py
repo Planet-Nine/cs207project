@@ -370,7 +370,8 @@ class PersistentDB:
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
-        print(ts[0])
+        if isinstance(ts,TimeSeries):
+            ts = [ts.time,ts.data]
         x1 = np.linspace(min(ts[0]),max(ts[0]), self.tslen_SAX)
         ts_SAX_data = interp1d(ts[0], ts[1])(x1)
         ts_SAX_time = x1
@@ -379,7 +380,6 @@ class PersistentDB:
         n = self.SAX_tree.search(rep)
         closestpk = None
         pkdist = None
-        print('n',n.ts)
         for pk in n.ts:
             thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
             if pkdist is None or thisdist < pkdist:
@@ -716,6 +716,7 @@ class BinarySearchTree(BinaryTree):
         for t in sorted(Breakpoints.keys()):
             if length < t:
                 key = t
+                break
         num = int(s,2)
         ind = 2*num
         return Breakpoints[key][ind]
@@ -723,15 +724,21 @@ class BinarySearchTree(BinaryTree):
     def split(self):
         segmentToSplit = None
         if self.SAX is not None:
+            diff = None
             for i,s in enumerate(self.SAX):
-                b = self.getBreakPoint(s)         
-                diff = None
+                b = self.getBreakPoint(s) 
                 if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]:
                     if diff is None or np.abs(self.online_mean[i] - b) < diff:
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
-                    
-            self.IncreaseCardinality(i)
+            if segmentToSplit == None:
+                diff = None
+                for i,s in enumerate(self.SAX):
+                    b = self.getBreakPoint(s) 
+                    if diff is None or np.abs(self.online_mean[i] - b) < diff:
+                        segmentToSplit = i
+                        diff = np.abs(self.online_mean[i] - b)
+            self.IncreaseCardinality(segmentToSplit)
     
     def IncreaseCardinality(self, segment):
         if self.SAX is None:
