@@ -732,7 +732,12 @@ class BinarySearchTree(BinaryTree):
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
             if segmentToSplit == None:
-                raise ValueError("Error splitting SAX tree, try reloading the data")
+                diff = None
+                for i,s in enumerate(self.SAX):
+                    b = self.getBreakPoint(s) 
+                    if diff is None or np.abs(self.online_mean[i] - b) < diff:
+                        segmentToSplit = i
+                        diff = np.abs(self.online_mean[i] - b)
             self.IncreaseCardinality(segmentToSplit)
     
     def IncreaseCardinality(self, segment):
