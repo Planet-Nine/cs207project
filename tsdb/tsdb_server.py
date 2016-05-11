@@ -47,12 +47,9 @@ class TSDBProtocol(asyncio.Protocol):
         return TSDBOp_Return(TSDBStatus.OK, op['op'])
 
     def _simsearch(self, op):
-        try:
-            self.server.db.simsearch(op['ts'])
-        except ValueError as e:
-            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
+        match = self.server.db.simsearch(op['ts'])
         self._run_trigger('simsearch', [op['ts']])
-        return TSDBOp_Return(TSDBStatus.OK, op['op'])
+        return TSDBOp_Return(TSDBStatus.OK, op['op'], match)
 
     def _upsert_meta(self, op):
         self.server.db.upsert_meta(op['pk'], op['md'])

@@ -13,7 +13,7 @@ schema = {
 }
 
 def main():
-    db = PersistentDB(schema, 'pk')
+    db = PersistentDB(schema, 'pk', load=False, overwrite=True)
     server = TSDBServer(db)
     server.run()
 

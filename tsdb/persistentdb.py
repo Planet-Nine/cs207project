@@ -196,15 +196,16 @@ class PersistentDB:
                     else:
                         raise IOError("Database is incompatible with input schema")
                 fd.close()
-                
+
                 # Read in timeseries of non-deleted keys
                 for pk in self.rows:
                     tsarray = np.load(self.dbname+"_ts/"+pk+"_ts.npy")
                     self.rows[pk]['ts'] = TimeSeries(tsarray[0,:], tsarray[1,:])
                     self.tslen = tsarray.shape[1]
+                    self.tslen_SAX = self.tslen
                     tsarray = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
                     x1 = np.linspace(min(tsarray[0,:]),max(tsarray[0,:]), self.tslen_SAX)
-                    ts_SAX_data = interp1d(tsarray[0,:], ts[1,:])(x1)
+                    ts_SAX_data = interp1d(tsarray[0,:], tsarray[1,:])(x1)
                     ts_SAX_time = x1
                     ts_SAX = TimeSeries(ts_SAX_time,ts_SAX_data)
                     self.rows_SAX[pk]['ts'] = ts_SAX
