@@ -356,6 +356,7 @@ class PersistentDB:
         
         self.vps.append(pk)
         self.upsert_meta(pk, {'vp':True})
+        self.indexes['d_vp-'+pk] = defaultdict(set)
         ts1 = self.rows[pk]['ts']
         for key in self.rows:
             ts2 = self.rows[key]['ts']
@@ -369,6 +370,7 @@ class PersistentDB:
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
+        print(ts[0])
         x1 = np.linspace(min(ts[0]),max(ts[0]), self.tslen_SAX)
         ts_SAX_data = interp1d(ts[0], ts[1])(x1)
         ts_SAX_time = x1
@@ -383,10 +385,12 @@ class PersistentDB:
             if pkdist is None or thisdist < pkdist:
                 closestpk = pk
                 pkdist = thisdist
-        if closestpk:
-            return self.rows[closestpk]['ts']
-        else:
-            return None
+
+        return closestpk
+        # if closestpk:
+        #     return self.rows[closestpk]['ts']
+        # else:
+        #     return None
         
     def simsearch(self, ts):
         """ Search over all timeseries in the database and return the primary key 
@@ -466,6 +470,8 @@ class PersistentDB:
         # If no metadata provided, return all rows
         if len(meta) == 0:
             pks = list(self.rows.keys())
+        elif len(meta) == 1 and self.pkfield in meta:
+            pks = [meta['pk']]
         # Otherwise, search for matching rows
         else:
             first = True
