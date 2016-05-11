@@ -712,7 +712,7 @@ class BinarySearchTree(BinaryTree):
             for i,s in enumerate(self.SAX):
                 b = self.getBreakPoint(s)         
                 diff = None
-                if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]
+                if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]:
                     if diff is None or np.abs(self.online_mean[i] - b) < diff:
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
