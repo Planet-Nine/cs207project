@@ -61,6 +61,32 @@ class TSDBOp_InsertTS(TSDBOp):
     def from_json(cls, json_dict):
         return cls(json_dict['pk'], ts.TimeSeries(*(json_dict['ts'])))
 
+class TSDBOp_DeleteTS(TSDBOp):
+    def __init__(self, pk):
+        super().__init__('delete_ts')
+        self['pk'] = pk
+
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls(json_dict['pk'])
+
+class TSDBOp_AddVP(TSDBOp):
+    def __init__(self, pk):
+        super().__init__('add_vp')
+        self['pk'] = pk
+
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls(json_dict['pk'])
+
+class TSDBOp_SimSearch(TSDBOp):
+    def __init__(self, ts):
+        super().__init__('simsearch')
+        self['ts'] = ts
+
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls(ts.TimeSeries(*(json_dict['ts'])))
 
 class TSDBOp_Return(TSDBOp):
 
@@ -156,6 +182,10 @@ class TSDBOp_RemoveTrigger(TSDBOp):
 # This simplifies reconstructing TSDBOp instances from network data.
 typemap = {
   'insert_ts': TSDBOp_InsertTS,
+  'delete_ts': TSDBOp_DeleteTS,
+  'add_vp': TSDBOp_AddVP,
+  'simsearch': TSDBOp_SimSearch,
+  'sim_search_SAX': TSDBOp_SimsearchSAX,
   'upsert_meta': TSDBOp_UpsertMeta,
   'select': TSDBOp_Select,
   'augmented_select': TSDBOp_AugmentedSelect,

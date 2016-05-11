@@ -1,5 +1,5 @@
 import asyncio
-from .dictdb import DictDB
+from .persistentdb import PersistentDB
 from importlib import import_module
 from collections import defaultdict, OrderedDict
 from .tsdb_serialization import Deserializer, serialize
@@ -28,6 +28,30 @@ class TSDBProtocol(asyncio.Protocol):
         except ValueError as e:
             return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         self._run_trigger('insert_ts', [op['pk']])
+        return TSDBOp_Return(TSDBStatus.OK, op['op'])
+
+    def _delete_ts(self, op):
+        try:
+            self.server.db.delete_ts(op['pk'])
+        except ValueError as e:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
+        self._run_trigger('delete_ts', [op['pk']])
+        return TSDBOp_Return(TSDBStatus.OK, op['op'])
+
+    def _add_vp(self, op):
+        try:
+            self.server.db.add_vp(op['pk'])
+        except ValueError as e:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
+        self._run_trigger('add_vp', [op['pk']])
+        return TSDBOp_Return(TSDBStatus.OK, op['op'])
+
+    def _simsearch(self, op):
+        try:
+            self.server.db.simsearch(op['ts'])
+        except ValueError as e:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
+        self._run_trigger('simsearch', [op['ts']])
         return TSDBOp_Return(TSDBStatus.OK, op['op'])
 
     def _upsert_meta(self, op):
@@ -116,6 +140,12 @@ class TSDBProtocol(asyncio.Protocol):
             if status is TSDBStatus.OK:
                 if isinstance(op, TSDBOp_InsertTS):
                     response = self._insert_ts(op)
+                elif isinstance(op, TSDBOp_DeleteTS):
+                    response = self._delete_ts(op)
+                 elif isinstance(op, TSDBOp_AddVP):
+                    response = self._add_vp(op)
+                 elif isinstance(op, TSDBOp_SimSearch):
+                    response = self._simsearch(op)
                 elif isinstance(op, TSDBOp_UpsertMeta):
                     response = self._upsert_meta(op)
                 elif isinstance(op, TSDBOp_Select):
@@ -172,6 +202,6 @@ class TSDBServer(object):
 
 
 if __name__=='__main__':
-    empty_schema = {'pk': {'convert': lambda x: x, 'index': None}}
-    db = DictDB(empty_schema, 'pk')
+    empty_schema = {'pk': {'type': str, 'index': None}}
+    db = PersistentDB(empty_schema, 'pk')
     TSDBServer(db).run()

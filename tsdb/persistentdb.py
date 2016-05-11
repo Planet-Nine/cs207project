@@ -64,6 +64,8 @@ class PersistentDB:
             Database filename
         overwrite : bool
             If load=False, whether to overwrite an existing database.
+        dist : function
+            Calculates the distance between two TimeSeries objects, must take arguments (ts1, ts2)
 
         Attributes
         ----------
@@ -320,7 +322,7 @@ class PersistentDB:
 
         self.update_indices(pk)
 
-    def add_vp(self, pk=None, dist=procs.corr_indb):
+    def add_vp(self, pk=None):
         """
         Adds pk as a vantage point
 
@@ -329,9 +331,6 @@ class PersistentDB:
         pk : str or None
             The primary key of the timeseries which is to be added as a vantage point.
             If None, method will choose a random entry in the database.
-        dist : function
-            The function used to compute distances between timeseries objects.
-            Must have arguments (ts1, ts2).
         """
 
         # ---- Validating input ---- #
@@ -352,10 +351,6 @@ class PersistentDB:
             raise ValueError("Primary key not in database")
         elif self.rows[pk]['vp']:
             raise ValueError("This timeseries is already a vantage point")
-        if self.dist is None:
-            self.dist = dist
-        elif self.dist != dist:
-            raise ValueError("All vantage points must follow same distance calculation")
         
         self.vps.append(pk)
         self.upsert_meta(pk, {'vp':True})

@@ -19,10 +19,25 @@ class TSDBClient(object):
         print("C> upsert msg", msg)
         return self._send(msg)
 
+    def delete_ts(self, primary_key):
+        msg = TSDBOp_DeleteTS(primary_key).to_json()
+        print("C> delete_ts msg", msg)
+        return self._send(msg)
+
+    def add_vp(self, primary_key=None):
+        msg = TSDBOp_AddVP(primary_key).to_json()
+        print("C> add_vp msg", msg)
+        return self._send(msg)
+
+    def simsearch(self, ts):
+        msg = TSDBOp_SimSearch(ts).to_json()
+        print("C> simsearch msg", msg)
+        return self._send(msg)
+
     def sim_search_SAX(self, arg):
         #your code here
         msg = TSDBOp_SimsearchSAX(arg).to_json()
-        print("C> select msg", msg)
+        print("C> simsearch_sax", msg)
         return self._send(msg)
     
     def select(self, metadata_dict={}, fields=None, additional=None):
