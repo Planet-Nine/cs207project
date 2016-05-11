@@ -355,6 +355,7 @@ class PersistentDB:
         
         self.vps.append(pk)
         self.upsert_meta(pk, {'vp':True})
+        self.indexes['d_vp-'+pk] = defaultdict(set)
         ts1 = self.rows[pk]['ts']
         for key in self.rows:
             ts2 = self.rows[key]['ts']
