@@ -4,7 +4,7 @@ import timeseries as ts
 
 schema = {
   'pk': {'type': str, 'index': None},  #will be indexed anyways
-  'ts': {'type': identity, 'index': None},
+  'ts': {'index': None},
   'order': {'type': int, 'index': 1},
   'blarg': {'type': int, 'index': 1},
   'mean': {'type': float, 'index': 1},
