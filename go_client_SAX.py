@@ -121,6 +121,7 @@ if __name__=='__main__':
                     self.button2.pack(side='right')
                                         
         def on_button2(self):
+            self.switch2 = 0
             if self.master3:
                 self.master3 = tk.Tk()
                 self.master4.destroy()
@@ -129,7 +130,7 @@ if __name__=='__main__':
                 self.master3 = tk.Tk()
             self.label_1 = tk.Label(self.master3,text="Please enter the file name for the query (as .npy file): ")
             self.entry = tk.Entry(self.master3)
-            self.button1 = tk.Button(self.master2, text="continue", command=self.on_button4)
+            self.button1 = tk.Button(self.master3, text="continue", command=self.on_button4)
             self.label_1.pack()
             self.entry.pack()
             self.button1.pack()
@@ -149,11 +150,13 @@ if __name__=='__main__':
                 if self.filename:
                     try:
                         tsarray = np.load(self.filename)
-                        self.arg = ts.TimeSeries(tsarray[0,:], tsarray[1,:])    
+                        self.arg = ts.TimeSeries(tsarray[0,:], tsarray[1,:]) 
+                        self.master3.destroy()
                     except:
                         self.master4 = tk.Tk()
                         self.label = tk.Label(self.master4,text="Error encountered, please make sure the file name is correct.")
                         self.button1 = tk.Button(self.master4, text="continue", command=self.on_button2)
+                        self.master3.destroy()
                         self.label.pack()
                         self.button1.pack()
                 else:
@@ -162,7 +165,7 @@ if __name__=='__main__':
                 mus = np.random.uniform(low=0.0, high=1.0, size=1)
                 sigs = np.random.uniform(low=0.05, high=0.4, size=1)
                 jits = np.random.uniform(low=0.05, high=0.2, size=1)
-
+                self.master4.destroy()
                 meta, tsrs = tsmaker(mus, sigs, jits)
  
                 self.arg = tsrs
