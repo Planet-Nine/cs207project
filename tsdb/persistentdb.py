@@ -196,20 +196,20 @@ class PersistentDB:
                     else:
                         raise IOError("Database is incompatible with input schema")
                 fd.close()
-
+                
                 # Read in timeseries of non-deleted keys
                 for pk in self.rows:
                     tsarray = np.load(self.dbname+"_ts/"+pk+"_ts.npy")
                     self.rows[pk]['ts'] = TimeSeries(tsarray[0,:], tsarray[1,:])
                     self.tslen = tsarray.shape[1]
-                    self.tslen_SAX = self.tslen
-                    tsarray = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
-                    x1 = np.linspace(min(tsarray[0,:]),max(tsarray[0,:]), self.tslen_SAX)
-                    ts_SAX_data = interp1d(tsarray[0,:], tsarray[1,:])(x1)
+                    tsarray2 = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
+                    x1 = np.linspace(min(tsarray2[0,:]),max(tsarray2[0,:]), self.tslen_SAX)
+                    ts_SAX_data = interp1d(tsarray2[0,:], tsarray2[1,:])(x1)
                     ts_SAX_time = x1
                     ts_SAX = TimeSeries(ts_SAX_time,ts_SAX_data)
                     self.rows_SAX[pk]['ts'] = ts_SAX
-                    
+                    rep = isax_indb(ts_SAX,self.card,self.wordlength)
+                    self.SAX_tree.insert(pk, rep)
                 self.index_bulk(list(self.rows.keys()))
             except:
                 raise IOError("Database does not exist or has been corrupted")
@@ -356,7 +356,6 @@ class PersistentDB:
         
         self.vps.append(pk)
         self.upsert_meta(pk, {'vp':True})
-        self.indexes['d_vp-'+pk] = defaultdict(set)
         ts1 = self.rows[pk]['ts']
         for key in self.rows:
             ts2 = self.rows[key]['ts']
@@ -378,6 +377,7 @@ class PersistentDB:
         n = self.SAX_tree.search(rep)
         closestpk = None
         pkdist = None
+        print('n',n.ts)
         for pk in n.ts:
             thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
             if pkdist is None or thisdist < pkdist:
@@ -741,6 +741,10 @@ class BinarySearchTree(BinaryTree):
         l = len(newSAXupper[segment])
         for i,word in enumerate(self.ts_SAX):
             if len(word[segment])<l:
+                for ts in self.ts:
+                    lengths = len([i for i, j in enumerate(self.ts) if j == ts])
+                    if lengths > 1:
+                        raise ValueError("Inserted same time series twice")
                 raise ValueError("Overflow error, consider increasing threshold or cardinality")    
             if word[segment][l-1] == '1':
                 newts_SAXupper += [word]

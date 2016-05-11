@@ -113,7 +113,14 @@ if __name__=='__main__':
             self.master2 = tk.Tk()
             card = self.entry1.get()
             if card:
-                self.card = int(card) 
+                try:
+                    self.card = int(card)
+                except:
+                    self.label_1 = tk.Label(self.master2,text="Please enter a number for the cardinality.")
+                    self.button1 = tk.Button(self.master2, text="continue", command=self.on_button)
+                    self.master1.destroy()
+                    self.label_1.pack()
+                    self.button1.pack()
             self.ld = self.entry2.get()
             if self.ld:
                 if self.ld[0].lower() == 't':
@@ -137,12 +144,33 @@ if __name__=='__main__':
             wl = self.entry6.get()
             tslen = self.entry7.get()
             if th:
-                self.th = int(th)
-            if wl:    
-                self.wl = int(wl)
+                try:
+                    self.th = int(th)
+                except:
+                    self.label_1 = tk.Label(self.master2,text="Please enter a number for the threshold.")
+                    self.button1 = tk.Button(self.master2, text="continue", command=self.on_button)
+                    self.master1.destroy()
+                    self.label_1.pack()
+                    self.button1.pack()
+            if wl:
+                try:
+                    self.wl = int(wl)
+                except:
+                    self.label_1 = tk.Label(self.master2,text="Please enter a number for the word length.")
+                    self.button1 = tk.Button(self.master2, text="continue", command=self.on_button)
+                    self.master1.destroy()
+                    self.label_1.pack()
+                    self.button1.pack()
             if tslen:
-                self.tslen = int(tslen)
-
+                try:
+                    self.tslen = int(tslen)
+                except:
+                    self.label_1 = tk.Label(self.master2,text="Please enter a number for the time series length.")
+                    self.button1 = tk.Button(self.master2, text="continue", command=self.on_button)
+                    self.master1.destroy()
+                    self.label_1.pack()
+                    self.button1.pack()
+            
             self.label_1 = tk.Label(self.master2,text="Is the following correct?\n\nLoad: "+str(self.ld)+'\n\nDatabase name: '+str(self.dbn)+'\n\nOverwrite: '+str(self.ovrw)+'\n\nCardinality: '+str(self.card)+'\n\nThreshold: '+str(self.th)+'\n\nWord length: '+str(self.wl)+'\n\nTime series length: '+str(self.tslen)+'\n\n',justify = 'left')
             self.button1 = tk.Button(self.master2, text="yes", command=self.on_button2)
             self.button2 = tk.Button(self.master2, text="no", command=self.on_button)
