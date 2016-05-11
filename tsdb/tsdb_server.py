@@ -70,10 +70,12 @@ class TSDBProtocol(asyncio.Protocol):
             return TSDBOp_Return(TSDBStatus.OK, op['op'], d)
         
     def _sim_search_SAX(self, op):
-        "run a select and then synchronously run some computation on it"
-        pk = self.server.db.simsearch_SAX(op['arg'])
+        try:
+            pk = self.server.db.simsearch_SAX(op['arg'])
+        except ValueError as e:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         return TSDBOp_Return(TSDBStatus.OK, op['op'], pk)
-
+    
     def _augmented_select(self, op):
         "run a select and then synchronously run some computation on it"
         loids, fields = self.server.db.select(op['md'], None, op['additional'])

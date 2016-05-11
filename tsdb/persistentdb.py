@@ -11,6 +11,7 @@ sys.path.insert(0, '../')   # This is sketchy AF but I'm not sure how else to do
 from timeseries import TimeSeries
 import os
 import procs
+from procs.isax import isax_indb
 import random
 
 OPMAP = {
@@ -267,7 +268,7 @@ class PersistentDB:
             self.rows[pk]['vp'] = False
 
         self.rows_SAX[pk]['ts'] = ts_SAX  
-        rep = procs.isax_indb(ts_SAX,self.card,self.wordlength)
+        rep = isax_indb(ts_SAX,self.card,self.wordlength)
         self.SAX_tree.insert(pk, rep)
         if 'vp' in self.schema:
             self.rows_SAX[pk]['vp'] = False
@@ -290,7 +291,7 @@ class PersistentDB:
         if pk in self.rows_SAX:
             if self.rows_SAX[pk]['vp'] == True:
                 self.del_vp(pk)
-            rep = procs.isax_indb(self.rows_SAX[pk]['ts'],self.card,self.wordlength)
+            rep = isax_indb(self.rows_SAX[pk]['ts'],self.card,self.wordlength)
             self.SAX_tree.delete(rep,pk)
             del self.rows_SAX[pk]
             
@@ -367,18 +368,23 @@ class PersistentDB:
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
-        if not isinstance(ts, TimeSeries):
-            raise ValueError("Input must be a TimeSeries object")
-        rep = procs.isax_indb(ts,self.card,self.wordlength)
+        x1 = np.linspace(min(ts[0]),max(ts[0]), self.tslen_SAX)
+        ts_SAX_data = interp1d(ts[0], ts[1])(x1)
+        ts_SAX_time = x1
+        ts_SAX = TimeSeries(ts_SAX_time,ts_SAX_data)
+        rep = isax_indb(ts_SAX,self.card,self.wordlength)
         n = self.SAX_tree.search(rep)
         closestpk = None
         pkdist = None
         for pk in n.ts:
-            thisdist = self.dist(ts, self.rows[pk]['ts'])
+            thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
             if pkdist is None or thisdist < pkdist:
                 closestpk = pk
                 pkdist = thisdist
-        return closestpk
+        if closestpk:
+            return self.rows[closestpk]['ts']
+        else:
+            return None
         
     def simsearch(self, ts):
         """ Search over all timeseries in the database and return the primary key 
@@ -535,8 +541,8 @@ class PersistentDB:
 
 class BinaryTree:
     def __init__(self, rep=None, parent=None,threshold = 10,wordlength = 16):
-        self.SAX = rep
         self.parent = parent
+        self.SAX = rep
         self.ts = []
         self.ts_SAX = []
         self.children = []
@@ -551,17 +557,17 @@ class BinaryTree:
         self.right = None    
             
     def addLeftChild(self, rep,threshold,wordlength): 
-        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
         self.left = n
         return n
         
     def addRightChild(self, rep,threshold,wordlength):
-        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
         self.right = n
         return n
         
     def addChild(self, rep,threshold,wordlength):
-        n = self.__class__(rep, parent=self,threshold=threshold, wordlength=wordlength)
+        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
         self.children += [n]
         return n
     
@@ -602,62 +608,62 @@ class BinarySearchTree(BinaryTree):
         pass
             
     def insert(self, pk,rep):
-        if self.isRoot():
+        if self.parent == None:
             index = 0
             for i,symbol in enumerate(rep):
                 if symbol[0] == '1':
                     index += 2**(self.word_length-i-1)
             self.children[index].insert(pk,rep)
-        elif self.isLeaf() and self.count < self.th:
+        elif self.right == None and self.left == None and self.count < self.th:
             self.ts += [pk]
             self.ts_SAX += [rep]
             self.mean_std_calculator(rep)
-        elif self.isLeaf():
+        elif self.right == None and self.left == None:
             self.ts += [pk]
             self.ts_SAX += [rep]
             self.mean_std_calculator(rep)
             self.split()
         else:
             l = len(self.left.SAX[self.splitting_index])
-            if rep[self.splitting_index][l-1] == '1':
+            if rep[self.splitting_index][l-2] == '1':
                 self.right.insert(pk,rep)
             else:
                 self.left.insert(pk,rep)
             
     def search(self, rep, pk = None):
         if pk is not None:
-            if self.isRoot():
+            if self.parent == None:
                 index = 0
                 for i,symbol in enumerate(rep):
                     if symbol[0] == '1':
                         index += 2**(self.word_length-i-1)
-                self.children[index].search(rep,pk)
-            elif self.isLeaf():
+                return self.children[index].search(rep,pk)
+            elif self.right == None and self.left == None:
                 if pk in self.ts:
                     return self
                 else:
                     raise ValueError('"{}" not found'.format(pk))
             else:
                 l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-1] == '1':
-                    self.right.search(rep,pk)
+                if rep[self.splitting_index][l-2] == '1':
+                    return self.right.search(rep,pk)
                 else:
-                    self.left.search(rep,pk)
+                    return self.left.search(rep,pk)
         else:
-            if self.isRoot():
+            if self.parent == None:
                 index = 0
                 for i,symbol in enumerate(rep):
                     if symbol[0] == '1':
                         index += 2**(self.word_length-i-1)
-                self.children[index].search(rep)
-            elif self.isLeaf():
+                return self.children[index].search(rep)
+            elif self.right == None and self.left == None:
                 return self
             else:
                 l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-1] == '1':
-                    self.right.search(rep)
+                if rep[self.splitting_index][l-2] == '1':
+                    return self.right.search(rep)
                 else:
-                    self.left.search(rep)
+                    return self.left.search(rep)
         
     def delete(self, rep, pk):        
         n = self.search(rep,pk)
@@ -722,16 +728,18 @@ class BinarySearchTree(BinaryTree):
     def IncreaseCardinality(self, segment):
         if self.SAX is None:
             raise ValueError('Cannot increase cardinality of root node')
-        newSAXupper = self.SAX
+        newSAXupper = list(self.SAX)
         newSAXupper[segment] = newSAXupper[segment]+'1'
-        newSAXlower = self.SAX
+        newSAXlower = list(self.SAX)
         newSAXlower[segment] = newSAXlower[segment]+'0'
-        newtsuppper = []
+        newtsupper = []
         newtslower = []
         newts_SAXupper = []
         newts_SAXlower = []
         l = len(newSAXupper[segment])
         for i,word in enumerate(self.ts_SAX):
+            if len(word[segment])<l:
+                raise ValueError("Overflow error, consider increasing threshold or cardinality")    
             if word[segment][l-1] == '1':
                 newts_SAXupper += [word]
                 newtsupper += [self.ts[i]]
@@ -743,12 +751,12 @@ class BinarySearchTree(BinaryTree):
         self.addRightChild(rep=newSAXupper,threshold=self.th, wordlength=self.word_length)
         for word in newts_SAXupper:
             self.right.mean_std_calculator(word)
-        self.right.ts = newtsuppper
-        self.right.ts_SAX = newts_SAXupper
+        self.right.ts = list(newtsupper)
+        self.right.ts_SAX = list(newts_SAXupper)
         for word in newts_SAXlower:
             self.left.mean_std_calculator(word)
-        self.left.ts = newtslower
-        self.left.ts_SAX = newts_SAXlower
+        self.left.ts = list(newtslower)
+        self.left.ts_SAX = list(newts_SAXlower)
         self.ts = []
         self.ts_SAX = []
         self.count = 0
@@ -788,4 +796,3 @@ class Tree_Initializer():
         for i in range(2**wordlength):
             self.tree.addChild(words[i],threshold,wordlength)
         
-    
