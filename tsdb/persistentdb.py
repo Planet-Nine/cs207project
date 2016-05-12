@@ -96,6 +96,8 @@ class PersistentDB:
             raise ValueError("Overwrite must be of type bool")
         if isinstance(schema, dict):
             for field in schema:
+                if field == 'DELETE':
+                    raise ValueError("The fieldname 'DELETE' is forbidden.")
                 if field != 'ts':   
                     if 'type' not in schema[field]:
                         raise ValueError("Schema must specify type for each non-ts field")
@@ -416,11 +418,6 @@ class PersistentDB:
     def update_indices(self, pk, oldrow=None):
         # If oldrow = None, assume all assignments are new.  If not, check whether the old values need to be deleted.
         row = self.rows[pk]
-        row_SAX = []
-        try:
-            row_SAX = self.rows_SAX[pk]
-        except:
-            pass
         for field in row:
             val = row[field]
             if field[:5] == 'd_vp-' or (self.schema[field]['index'] is not None and self.schema[field]['type'] in [int,float]):
@@ -439,11 +436,6 @@ class PersistentDB:
                         self.indexes[field][val].add(pk)
                 else:
                     self.indexes[field][val].add(pk)
-        for field in row_SAX:
-            v = row[field]
-            if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
-                idx = self.indexes[field]
-                idx[v].add(pk)
 
     def select(self, meta, fields, additional=None):
 

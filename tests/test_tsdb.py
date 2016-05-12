@@ -108,6 +108,22 @@ class MyTest(unittest.TestCase):
 
         closest = db.simsearch(query)
 
+    def test_simsearchSAX(self):
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
+        n_add = 50
+        mus = np.random.uniform(low=0.0, high=1.0, size=n_add)
+        sigs = np.random.uniform(low=0.05, high=0.4, size=n_add)
+        jits = np.random.uniform(low=0.05, high=0.2, size=n_add)
+        for i, m, s, j in zip(range(n_add), mus, sigs, jits):
+            db.insert_ts("ts-{}".format(i), tsmaker(m, s, j))
+
+        m = np.random.uniform(low=0.0, high=1.0)
+        s = np.random.uniform(low=0.05, high=0.4)
+        j = np.random.uniform(low=0.05, high=0.2)
+        query = tsmaker(m, s, j)
+
+        closest = db.simsearch_SAX(query)
+
     def test_trees(self):
         db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
         n_add = 50
@@ -123,6 +139,28 @@ class MyTest(unittest.TestCase):
         for row in fields:
             self.assertLessEqual(row['mean'], 0.5)
             self.assertGreater(row['std'], 2)
+
+    def test_load_del(self):
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
+        n_add = 50
+        mus = np.random.uniform(low=0.0, high=1.0, size=n_add)
+        sigs = np.random.uniform(low=0.05, high=0.4, size=n_add)
+        jits = np.random.uniform(low=0.05, high=0.2, size=n_add)
+        saveinfo = {}
+        for i, m, s, j in zip(range(n_add), mus, sigs, jits):
+            new_ts = tsmaker(m, s, j)
+            db.insert_ts("ts-{}".format(i), tsmaker(m, s, j))
+            db.upsert_meta("ts-{}".format(i), {'mean':new_ts.mean(), 'std':new_ts.std()})
+            saveinfo["ts-{}".format(i)] = new_ts.mean()
+
+        db.delete_ts("ts-4")
+
+        newdb = PersistentDB(schema, 'pk', dbname='testdb', load=True)
+        pks, fields = db.select(meta={}, fields=['mean'])
+        self.assertEqual(len(pks), n_add-1)
+        self.assertTrue("ts-4" not in pks)
+        for i in range(0,n_add-1):
+            self.assertEqual(fields[i]['mean'], saveinfo[pks[i]])
 
     ############## TEST WORKS ON LOCAL MACHINE BUT NOT IN TRAVIS #################################
     #def test_client_ops(self):
