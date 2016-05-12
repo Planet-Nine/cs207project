@@ -28,7 +28,7 @@ class BinarySearchTree:
 
     def _put(self,key,val,currentNode):
         if key == currentNode.key:
-            currentNode.val.append(val)
+            currentNode.payload.append(val)
         elif key < currentNode.key:
             if currentNode.hasLeftChild():
                    self._put(key,val,currentNode.leftChild)
@@ -266,7 +266,7 @@ class BinaryTree:
         self.children = []
         self.th = threshold
         self.count = 0
-        self.splitting_index = 0 
+        self.splitting_index = None 
         self.word_length = wordlength
         self.online_mean = np.zeros(self.word_length)
         self.online_stdev = np.zeros(self.word_length)
@@ -341,8 +341,8 @@ class SAXTree(BinaryTree):
             self.mean_std_calculator(rep)
             self.split()
         else:
-            l = len(self.left.SAX[self.splitting_index])
-            if rep[self.splitting_index][l-2] == '1':
+            l = len(self.SAX[self.splitting_index])
+            if rep[self.splitting_index][l] == '1':
                 self.right.insert(pk,rep)
             else:
                 self.left.insert(pk,rep)
@@ -361,8 +361,8 @@ class SAXTree(BinaryTree):
                 else:
                     raise ValueError('"{}" not found'.format(pk))
             else:
-                l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-2] == '1':
+                l = len(self.SAX[self.splitting_index])
+                if rep[self.splitting_index][l] == '1':
                     return self.right.search(rep,pk)
                 else:
                     return self.left.search(rep,pk)
@@ -376,8 +376,8 @@ class SAXTree(BinaryTree):
             elif self.right == None and self.left == None:
                 return self
             else:
-                l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-2] == '1':
+                l = len(self.SAX[self.splitting_index])
+                if rep[self.splitting_index][l] == '1':
                     return self.right.search(rep)
                 else:
                     return self.left.search(rep)
@@ -403,6 +403,7 @@ class SAXTree(BinaryTree):
             for t in sorted(Breakpoints.keys()):
                 if length < t:
                     key = t
+                    break
             num = int(j,2)
             ind = 2*num
             number += [Breakpoints[key][ind]]
@@ -425,6 +426,7 @@ class SAXTree(BinaryTree):
         for t in sorted(Breakpoints.keys()):
             if length < t:
                 key = t
+                break
         num = int(s,2)
         ind = 2*num
         return Breakpoints[key][ind]
@@ -432,15 +434,23 @@ class SAXTree(BinaryTree):
     def split(self):
         segmentToSplit = None
         if self.SAX is not None:
+            diff = None
             for i,s in enumerate(self.SAX):
-                b = self.getBreakPoint(s)         
-                diff = None
+                b = self.getBreakPoint(s) 
                 if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]:
                     if diff is None or np.abs(self.online_mean[i] - b) < diff:
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
-                    
-            self.IncreaseCardinality(i)
+            
+            if segmentToSplit == None:
+                diff = None
+                for i,s in enumerate(self.SAX):
+                    b = self.getBreakPoint(s) 
+                    if diff is None or np.abs(self.online_mean[i] - b) < diff:
+                        segmentToSplit = i
+                        diff = np.abs(self.online_mean[i] - b)
+                
+            self.IncreaseCardinality(segmentToSplit)
     
     def IncreaseCardinality(self, segment):
         if self.SAX is None:
@@ -454,6 +464,7 @@ class SAXTree(BinaryTree):
         newts_SAXupper = []
         newts_SAXlower = []
         l = len(newSAXupper[segment])
+        print('self.SAX',self.SAX,segment)
         for i,word in enumerate(self.ts_SAX):
             if len(word[segment])<l:
                 for ts in self.ts:
@@ -478,6 +489,7 @@ class SAXTree(BinaryTree):
             self.left.mean_std_calculator(word)
         self.left.ts = list(newtslower)
         self.left.ts_SAX = list(newts_SAXlower)
+        print('self.left-right.count',self.left.count,self.right.count)
         self.ts = []
         self.ts_SAX = []
         self.count = 0
