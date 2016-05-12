@@ -133,9 +133,7 @@ async def tcp_echo_client(message,loop,port=9999,host='127.0.0.1'):
     if deserializer.ready():
         msg=deserializer.deserialize()
         status = msg['status']
-        print ("C> status:", status)
         payload = msg['payload']
-        print ("C> payload:", payload)
     return status, payload
 
     print('Close the socket')
@@ -147,7 +145,7 @@ if __name__ == '__main__':
   loop = asyncio.get_event_loop()
   app = tornado.web.Application([
   (r'/insert_ts', InsertHandler,dict(loop=loop)),
-  (r'/add_vp', InsertHandler,dict(loop=loop)),
+  (r'/add_vp', VpHandler,dict(loop=loop)),
   (r'/delete', DeleteHandler,dict(loop=loop)),
   (r'/upsert_meta', UpsertHandler,dict(loop=loop)),
   (r'/select', SelectHandler,dict(loop=loop)),
