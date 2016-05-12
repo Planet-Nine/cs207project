@@ -53,10 +53,18 @@ Requirements for schema:
 - If vantage points are desired, 'vp' : {'type':bool} must appear in the schema.  Otherwise, the add_vp function will raise an error when called.
 - The 'additional' options in the select() function will not work unless 'order' appears in the schema.
 
-More about searching TBD.
+The database contains two methods for similarity search: 
+- simsearch(ts): Uses cross-correlation to define the similarity of two TimeSeries objects.  Note: you must add at least one vantage point with the add_vp() method before using this function.
+- simsearch_SAX(ts): Uses a SAX representation to define the similarity of two TimeSeries objects.
+
+Both methods will return the primary key of the object in the database with the shortest distance to the input TimeSeries, as defined by that method.
 
 Further details on the functionality of the PersistentDB class may be found in tsdb/persistentdb_readme.txt
 
 ##### Running the server
 
+TO-DO: Describe general setup.
+
 ##### REST API
+
+HAROLD TO-DO: Instructions for running api
