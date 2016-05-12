@@ -3,33 +3,34 @@ import unittest
 import multiprocessing
 import time
 from timeseries import TimeSeries
-from tsdb.dictdb import DictDB
+from tsdb.persistentdb import PersistentDB
 from tsdb.tsdb_client import *
 from tsdb.tsdb_server import TSDBServer
 from tsdb.tsdb_error import *
-
-
 import numpy as np
-
-identity = lambda x: x
+from scipy.stats import norm
 
 schema = {
-  'pk': {'convert': identity, 'index': None},  #will be indexed anyways
-  'ts': {'convert': identity, 'index': None},
-  'order': {'convert': int, 'index': 1},
-  'blarg': {'convert': int, 'index': 1},
-  'useless': {'convert': identity, 'index': None},
-  'mean': {'convert': float, 'index': 1},
-  'std': {'convert': float, 'index': 1},
-  'vp': {'convert': bool, 'index': 1}
+  'pk': {'type': str, 'index': None},  #will be indexed anyways
+  'ts': {'index': None},
+  'order': {'type': int, 'index': 1},
+  'mean': {'type': float, 'index': 1},
+  'std': {'type': float, 'index': 1},
+  'vp': {'type': bool, 'index': 1}
 }
+
+def tsmaker(m, s, j):
+    "returns metadata and a time series in the shape of a jittered normal"
+    t = np.arange(0.0, 1.0, 0.01)
+    v = norm.pdf(t, m, s) + j*np.random.randn(100)
+    return TimeSeries(t, v)
 
 class MyTest(unittest.TestCase):
     
     def test_db_tsinsert(self):
         ts1 = TimeSeries([1,2,3],[4,5,6])
         ts2 = TimeSeries([1,2,3],[4,5,6])
-        db = DictDB(schema, 'pk')
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
         db.insert_ts('ts1', ts1)
         with self.assertRaises(ValueError):
             db.insert_ts('ts1', ts2)
@@ -40,7 +41,7 @@ class MyTest(unittest.TestCase):
 
     def test_db_upsertmeta(self):
         ts1 = TimeSeries([1,2,3],[4,5,6])
-        db = DictDB(schema, 'pk')
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
         with self.assertRaises(ValueError):
             db.upsert_meta('ts1', {'mean':5})
         db.insert_ts('ts1', ts1)
@@ -49,7 +50,7 @@ class MyTest(unittest.TestCase):
         db.upsert_meta('ts1', {'mean':5})
 
     def test_db_select(self):
-        db = DictDB(schema, 'pk')
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
         db.insert_ts('one', TimeSeries([1,2,3],[4,5,6]))
         db.insert_ts('two', TimeSeries([7,8,9],[3,4,5]))
         db.insert_ts('negone', TimeSeries([1,2,3],[-4,-5,-6]))
@@ -85,6 +86,44 @@ class MyTest(unittest.TestCase):
         pks, fields = db.select(meta={}, fields=None, additional={'sort_by':'-order', 'limit':2})
         self.assertEqual(pks, ['two', 'one'])
         
+    def test_simsearch(self):
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
+        n_add = 50
+        mus = np.random.uniform(low=0.0, high=1.0, size=n_add)
+        sigs = np.random.uniform(low=0.05, high=0.4, size=n_add)
+        jits = np.random.uniform(low=0.05, high=0.2, size=n_add)
+        for i, m, s, j in zip(range(n_add), mus, sigs, jits):
+            db.insert_ts("ts-{}".format(i), tsmaker(m, s, j))
+
+        m = np.random.uniform(low=0.0, high=1.0)
+        s = np.random.uniform(low=0.05, high=0.4)
+        j = np.random.uniform(low=0.05, high=0.2)
+        query = tsmaker(m, s, j)
+
+        with self.assertRaises(ValueError):  # No similarity search w/o vantage points
+            closest = db.simsearch(query)
+
+        for i in range(5):
+            db.add_vp()
+
+        closest = db.simsearch(query)
+
+    def test_trees(self):
+        db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True)
+        n_add = 50
+        mus = np.random.uniform(low=0.0, high=1.0, size=n_add)
+        sigs = np.random.uniform(low=0.05, high=0.4, size=n_add)
+        jits = np.random.uniform(low=0.05, high=0.2, size=n_add)
+        for i, m, s, j in zip(range(n_add), mus, sigs, jits):
+            new_ts = tsmaker(m, s, j)
+            db.insert_ts("ts-{}".format(i), tsmaker(m, s, j))
+            db.upsert_meta("ts-{}".format(i), {'mean':new_ts.mean(), 'std':new_ts.std()})
+
+        pks, fields = db.select(meta={'mean':{'<=':0.5}, 'std':{'>':2}}, fields=['mean', 'std'])
+        for row in fields:
+            self.assertLessEqual(row['mean'], 0.5)
+            self.assertGreater(row['std'], 2)
+
     ############## TEST WORKS ON LOCAL MACHINE BUT NOT IN TRAVIS #################################
     #def test_client_ops(self):
     #    schema["d_t3"] = {'convert': float, 'index': 1}

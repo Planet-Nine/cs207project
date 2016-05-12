@@ -7,12 +7,13 @@ import gc
 import uuid
 from scipy.interpolate import interp1d
 import sys
-sys.path.insert(0, '../')   # This is sketchy AF but I'm not sure how else to do it
+sys.path.insert(0, '../')  
 from timeseries import TimeSeries
 import os
 import procs
 from procs.isax import isax_indb
 import random
+from .trees import BinarySearchTree, Tree_Initializer
 
 OPMAP = {
     '<': operator.lt,
@@ -22,29 +23,7 @@ OPMAP = {
     '<=': operator.le,
     '>=': operator.ge
 }
-
-Breakpoints = {}
-Breakpoints[2] = np.array([0.]) 
-Breakpoints[4] = np.array([-0.67449,0,0.67449]) 
-Breakpoints[8] = np.array([-1.1503,-0.67449,-0.31864,0,0.31864,0.67449,1.1503]) 
-Breakpoints[16] = np.array([-1.5341,-1.1503,-0.88715,-0.67449,-0.48878,-0.31864,-0.15731,0,0.15731,0.31864,0.48878,0.67449,0.88715,1.1503,1.5341]) 
-Breakpoints[32] = np.array([-1.8627,-1.5341,-1.318,-1.1503,-1.01,-0.88715,-0.77642,-0.67449,-0.57913,-0.48878,-0.40225,-0.31864,-0.2372,-0.15731,-0.078412,0,0.078412,0.15731,0.2372,0.31864,0.40225,0.48878,0.57913,0.67449,0.77642,0.88715,1.01,1.1503,1.318,1.5341,1.8627]) 
-Breakpoints[64] = np.array([-2.1539,-1.8627,-1.6759,-1.5341,-1.4178,-1.318,-1.2299,-1.1503,-1.0775,-1.01,-0.94678,-0.88715,-0.83051,-0.77642,-0.72451,-0.67449,-0.6261,-0.57913,-0.53341,-0.48878,-0.4451,-0.40225,-0.36013,-0.31864,-0.27769,-0.2372,-0.1971,-0.15731,-0.11777,-0.078412,-0.039176,0,0.039176,0.078412,0.11777,0.15731,0.1971,0.2372,0.27769,0.31864,0.36013,0.40225,0.4451,0.48878,0.53341,0.57913,0.6261,0.67449,0.72451,0.77642,0.83051,0.88715,0.94678,1.01,1.0775,1.1503,1.2299,1.318,1.4178,1.5341,1.6759,1.8627,2.1539]) 
-
-Breakpoints[128] = np.array([-2.4176,-2.1539,-1.9874,-1.8627,-1.7617,-1.6759,-1.601,-1.5341,-1.4735,-1.4178,-1.3662,-1.318,-1.2727,-1.2299,-1.1892,-1.1503,-1.1132,-1.0775,-1.0432,-1.01,-0.9779,-0.94678,-0.91656,-0.88715,-0.85848,-0.83051,-0.80317,-0.77642,-0.75022,-0.72451,-0.69928,-0.67449,-0.6501,-0.6261,-0.60245,-0.57913,-0.55613,-0.53341,-0.51097,-0.48878,-0.46683,-0.4451,-0.42358,-0.40225,-0.38111,-0.36013,-0.33931,-0.31864,-0.2981,-0.27769,-0.25739,-0.2372,-0.21711,-0.1971,-0.17717,-0.15731,-0.13751,-0.11777,-0.098072,-0.078412,-0.058783,-0.039176,-0.019584,0,0.019584,0.039176,0.058783,0.078412,0.098072,0.11777,0.13751,0.15731,0.17717,0.1971,0.21711,0.2372,0.25739,0.27769,0.2981,0.31864,0.33931,0.36013,0.38111,0.40225,0.42358,0.4451,0.46683,0.48878,0.51097,0.53341,0.55613,0.57913,0.60245,0.6261,0.6501,0.67449,0.69928,0.72451,0.75022,0.77642,0.80317,0.83051,0.85848,0.88715,0.91656,0.94678,0.9779,1.01,1.0432,1.0775,1.1132,1.1503,1.1892,1.2299,1.2727,1.318,1.3662,1.4178,1.4735,1.5341,1.601,1.6759,1.7617,1.8627,1.9874,2.1539,2.4176])
                              
-def metafiltered(d, schema, fieldswanted):
-    d2 = {}
-    if len(fieldswanted) == 0:
-        keys = [k for k in d.keys() if k != 'ts']
-    else:
-        keys = [k for k in d.keys() if k in fieldswanted]
-    for k in keys:
-        if k in schema:
-            d2[k] = schema[k]['convert'](d[k])
-    return d2
-
-
 class PersistentDB:
     "Database implementation with a local dictionary, which saves all necessary data to files for later use"
 
@@ -71,6 +50,8 @@ class PersistentDB:
         Attributes
         ----------
         indexes : dict
+            Key = fieldname
+            Value = binary search tree (if int or float) or dictionary of sets (otherwise) mapping values to pks
         rows : dict
             Key = primary key
             Value = dict of the fields associated with each key
@@ -149,15 +130,13 @@ class PersistentDB:
         self.vps = []
         for s in schema:
             indexinfo = schema[s]['index']
-            # convert = schema[s]['type']
-            # later use binary search trees for highcard/numeric
-            # bitmaps for lowcard/str_or_factor
             if indexinfo is not None:
-                self.indexes[s] = defaultdict(set)
+                if schema[s]['type'] == int or schema[s]['type'] == float:
+                    self.indexes[s] = BinarySearchTree()
+                else:  # Add a bitmask option for strings?
+                    self.indexes[s] = defaultdict(set)
 
-        # Trees for any numerical fields for faster searching?  (Do later...)
-
-        if load:
+        if load:   
             try:
                 fd = open(dbname)
                 for l in fd.readlines():
@@ -185,7 +164,7 @@ class PersistentDB:
                                 self.rows_SAX[pk][field] = self.schema[field]['type'](val)
                         if field == 'vp' and val == 'True':
                             self.vps.append(pk)
-                            self.indexes['d_vp-'+pk] = defaultdict(set)
+                            self.indexes['d_vp-'+pk] = BinarySearchTree()
                     elif field == 'DELETE':
                         if 'vp' in schema and self.rows[pk]['vp'] == True:
                             self.del_vp(pk)
@@ -281,10 +260,16 @@ class PersistentDB:
         self.update_indices(pk)
 
 
-    def delete_ts(self, pk):
+    def delete_ts(self, pk):    # Delete values from trees
         if pk in self.rows:
-            if self.rows[pk]['vp'] == True:
-                self.del_vp(pk)
+            for field in self.rows[pk]:
+                if self.schema[field]['index'] is not None:
+                    if self.schema[field]['type'] in [int, float]:
+                        self.indexes[field].delete(self.rows[pk][field], pk)
+                    else:
+                        self.indexes[field][self.rows[pk][field]].remove(pk)  
+                if field == 'vp' and self.rows[pk]['vp'] == True:
+                    self.del_vp(pk)
             del self.rows[pk]
             fd = open(self.dbname, 'a')
             fd.write(pk+':DELETE:0\n')
@@ -296,12 +281,12 @@ class PersistentDB:
             self.SAX_tree.delete(rep,pk)
             del self.rows_SAX[pk]
             
-         
     def upsert_meta(self, pk, meta):
         if isinstance(meta, dict) == False:
             raise ValueError('Metadata should be in the form of a dictionary')
         if pk not in self.rows:
             raise ValueError('Timeseries should be added prior to metadata')
+        oldrow = self.rows[pk].copy()
         for field in meta:
             if field in self.schema:
                 try:
@@ -316,13 +301,12 @@ class PersistentDB:
             else:
                 raise ValueError('Field not supported by schema')
 
-
         fd = open(self.dbname, 'a')
         for field in meta:
             fd.write(pk+':'+field+':'+str(meta[field])+'\n')
         fd.close()
 
-        self.update_indices(pk)
+        self.update_indices(pk, oldrow)
 
     def add_vp(self, pk=None):
         """
@@ -356,7 +340,7 @@ class PersistentDB:
         
         self.vps.append(pk)
         self.upsert_meta(pk, {'vp':True})
-        self.indexes['d_vp-'+pk] = defaultdict(set)
+        self.indexes['d_vp-'+pk] = BinarySearchTree()
         ts1 = self.rows[pk]['ts']
         for key in self.rows:
             ts2 = self.rows[key]['ts']
@@ -370,7 +354,6 @@ class PersistentDB:
         del self.indexes['d_vp-'+vp]
 
     def simsearch_SAX(self, ts):
-        print(ts[0])
         x1 = np.linspace(min(ts[0]),max(ts[0]), self.tslen_SAX)
         ts_SAX_data = interp1d(ts[0], ts[1])(x1)
         ts_SAX_time = x1
@@ -429,8 +412,8 @@ class PersistentDB:
         for pkid in pks:
             self.update_indices(pkid)
          
-    # Update to tree structure
-    def update_indices(self, pk):
+    def update_indices(self, pk, oldrow=None):
+        # If oldrow = None, assume all assignments are new.  If not, check whether the old values need to be deleted.
         row = self.rows[pk]
         row_SAX = []
         try:
@@ -438,10 +421,23 @@ class PersistentDB:
         except:
             pass
         for field in row:
-            v = row[field]
-            if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
-                idx = self.indexes[field]
-                idx[v].add(pk)
+            val = row[field]
+            if field[:5] == 'd_vp-' or (self.schema[field]['index'] is not None and self.schema[field]['type'] in [int,float]):
+                if oldrow is not None and field in oldrow:
+                    if oldrow[field] != val:
+                        oldval = oldrow[field]
+                        self.indexes[field].delete(oldval, pk)
+                        self.indexes[field].put(val, pk)
+                else:
+                    self.indexes[field].put(val, pk)
+            elif self.schema[field]['index'] is not None:
+                if oldrow is not None and field in oldrow:
+                    if oldrow[field] != val:
+                        oldval = oldrow[field]
+                        self.indexes[field][oldval].remove(pk)
+                        self.indexes[field][val].add(pk)
+                else:
+                    self.indexes[field][val].add(pk)
         for field in row_SAX:
             v = row[field]
             if (field in self.schema and self.schema[field]['index'] is not None) or field[:5] == 'd_vp-':
@@ -488,10 +484,18 @@ class PersistentDB:
                 pks_field = []
                 if field not in self.schema and field[:5] != 'd_vp-':
                     raise ValueError('Field not supported by schema')
+                if field[:5] != 'd_vp-' and self.schema[field]['index'] is None:
+                    raise ValueError('May only search by indexed fields or primary key')
                 else:
-                    for val in self.indexes[field]:
-                        if op(val,compval):
-                            pks_field = pks_field + list(self.indexes[field][val])
+                    if field[:5] == 'd_vp-' or self.schema[field]['type'] in [int, float]:
+                        if op == OPMAP['==']:
+                            pks_field = self.indexes[field].get(compval)
+                        else:
+                            pks_field = self.indexes[field].collect(compval, op)
+                    else:
+                        for val in self.indexes[field]:
+                            if op(val,compval):
+                                pks_field = pks_field + list(self.indexes[field][val])
                     if first: 
                         pks = set(pks_field)
                         first = False
@@ -547,264 +551,3 @@ class PersistentDB:
         else:
             return pks[:limit], matchfields[:limit]
 
-class BinaryTree:
-    def __init__(self, rep=None, parent=None,threshold = 10,wordlength = 16):
-        self.parent = parent
-        self.SAX = rep
-        self.ts = []
-        self.ts_SAX = []
-        self.children = []
-        self.th = threshold
-        self.count = 0
-        self.splitting_index = 0 
-        self.word_length = wordlength
-        self.online_mean = np.zeros(self.word_length)
-        self.online_stdev = np.zeros(self.word_length)
-        self.dev_accum = np.zeros(self.word_length)
-        self.left = None
-        self.right = None    
-            
-    def addLeftChild(self, rep,threshold,wordlength): 
-        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
-        self.left = n
-        return n
-        
-    def addRightChild(self, rep,threshold,wordlength):
-        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
-        self.right = n
-        return n
-        
-    def addChild(self, rep,threshold,wordlength):
-        n = self.__class__(rep=rep, parent=self,threshold=threshold, wordlength=wordlength)
-        self.children += [n]
-        return n
-    
-    def hasLeftChild(self):
-        return self.left is not None
-
-    def hasRightChild(self):
-        return self.right is not None
-
-    def hasAnyChild(self):
-        return self.hasRightChild() or self.hasLeftChild()
-
-    def hasBothChildren(self):
-        return self.hasRightChild() and self.hasLeftChild()
-    
-    def hasNoChildren(self):
-        return not self.hasRightChild() and not self.hasLeftChild()
-    
-    def isLeftChild(self):
-        return self.parent and self.parent.left == self
-
-    def isRightChild(self):
-        return self.parent and self.parent.right == self
-
-    def isRoot(self):
-        return not self.parent
-
-    def isLeaf(self):
-        return not (self.right or self.left)
-    
-                
-class BinarySearchTree(BinaryTree):
-        
-    def __init__(self, rep=None, parent=None, threshold = 10, wordlength = 16):
-        super().__init__(rep, parent,threshold,wordlength)
-        
-    def _insert_hook(self):
-        pass
-            
-    def insert(self, pk,rep):
-        if self.parent == None:
-            index = 0
-            for i,symbol in enumerate(rep):
-                if symbol[0] == '1':
-                    index += 2**(self.word_length-i-1)
-            self.children[index].insert(pk,rep)
-        elif self.right == None and self.left == None and self.count < self.th:
-            self.ts += [pk]
-            self.ts_SAX += [rep]
-            self.mean_std_calculator(rep)
-        elif self.right == None and self.left == None:
-            self.ts += [pk]
-            self.ts_SAX += [rep]
-            self.mean_std_calculator(rep)
-            self.split()
-        else:
-            l = len(self.left.SAX[self.splitting_index])
-            if rep[self.splitting_index][l-2] == '1':
-                self.right.insert(pk,rep)
-            else:
-                self.left.insert(pk,rep)
-            
-    def search(self, rep, pk = None):
-        if pk is not None:
-            if self.parent == None:
-                index = 0
-                for i,symbol in enumerate(rep):
-                    if symbol[0] == '1':
-                        index += 2**(self.word_length-i-1)
-                return self.children[index].search(rep,pk)
-            elif self.right == None and self.left == None:
-                if pk in self.ts:
-                    return self
-                else:
-                    raise ValueError('"{}" not found'.format(pk))
-            else:
-                l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-2] == '1':
-                    return self.right.search(rep,pk)
-                else:
-                    return self.left.search(rep,pk)
-        else:
-            if self.parent == None:
-                index = 0
-                for i,symbol in enumerate(rep):
-                    if symbol[0] == '1':
-                        index += 2**(self.word_length-i-1)
-                return self.children[index].search(rep)
-            elif self.right == None and self.left == None:
-                return self
-            else:
-                l = len(self.left.SAX[self.splitting_index])
-                if rep[self.splitting_index][l-2] == '1':
-                    return self.right.search(rep)
-                else:
-                    return self.left.search(rep)
-        
-    def delete(self, rep, pk):        
-        n = self.search(rep,pk)
-        index = n.ts.index(pk)
-        n.ts.remove(pk)
-        n.ts_SAX = n.ts_SAX[:index]+n.ts_SAX[index+1:]
-        n.online_mean = np.zeros(self.word_length)
-        n.online_stdev = np.zeros(self.word_length)
-        n.dev_accum = np.zeros(self.word_length)
-        n.count = 0
-        for word in n.ts_SAX:
-            n.mean_std_calculator(word)
-        
-       
-    def word2number(self,word):
-        number = []
-        for j in word:
-            l = len(j)
-            length = 2**l
-            for t in sorted(Breakpoints.keys()):
-                if length < t:
-                    key = t
-            num = int(j,2)
-            ind = 2*num
-            number += [Breakpoints[key][ind]]
-        return np.array(number)
-    
-    def mean_std_calculator(self,word):
-        self.count += 1
-        mu_1 = self.online_mean
-        value = self.word2number(word)
-        delta = value - self.online_mean
-        self.online_mean = self.online_mean + delta/self.count
-        prod = (value-self.online_mean)*(value-mu_1)
-        self.dev_accum = self.dev_accum + prod
-        if self.count > 1:
-            self.online_stdev = np.sqrt(self.dev_accum/(self.count-1))
-    
-    def getBreakPoint(self,s):
-        l = len(s)
-        length = 2**l
-        for t in sorted(Breakpoints.keys()):
-            if length < t:
-                key = t
-        num = int(s,2)
-        ind = 2*num
-        return Breakpoints[key][ind]
-    
-    def split(self):
-        segmentToSplit = None
-        if self.SAX is not None:
-            for i,s in enumerate(self.SAX):
-                b = self.getBreakPoint(s)         
-                diff = None
-                if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]:
-                    if diff is None or np.abs(self.online_mean[i] - b) < diff:
-                        segmentToSplit = i
-                        diff = np.abs(self.online_mean[i] - b)
-                    
-            self.IncreaseCardinality(i)
-    
-    def IncreaseCardinality(self, segment):
-        if self.SAX is None:
-            raise ValueError('Cannot increase cardinality of root node')
-        newSAXupper = list(self.SAX)
-        newSAXupper[segment] = newSAXupper[segment]+'1'
-        newSAXlower = list(self.SAX)
-        newSAXlower[segment] = newSAXlower[segment]+'0'
-        newtsupper = []
-        newtslower = []
-        newts_SAXupper = []
-        newts_SAXlower = []
-        l = len(newSAXupper[segment])
-        for i,word in enumerate(self.ts_SAX):
-            if len(word[segment])<l:
-                for ts in self.ts:
-                    lengths = len([i for i, j in enumerate(self.ts) if j == ts])
-                    if lengths > 1:
-                        raise ValueError("Inserted same time series twice")
-                raise ValueError("Overflow error, consider increasing threshold or cardinality")    
-            if word[segment][l-1] == '1':
-                newts_SAXupper += [word]
-                newtsupper += [self.ts[i]]
-            else:
-                newts_SAXlower += [word]
-                newtslower += [self.ts[i]]
-        
-        self.addLeftChild(rep=newSAXlower,threshold=self.th, wordlength=self.word_length)
-        self.addRightChild(rep=newSAXupper,threshold=self.th, wordlength=self.word_length)
-        for word in newts_SAXupper:
-            self.right.mean_std_calculator(word)
-        self.right.ts = list(newtsupper)
-        self.right.ts_SAX = list(newts_SAXupper)
-        for word in newts_SAXlower:
-            self.left.mean_std_calculator(word)
-        self.left.ts = list(newtslower)
-        self.left.ts_SAX = list(newts_SAXlower)
-        self.ts = []
-        self.ts_SAX = []
-        self.count = 0
-        self.online_mean = None
-        self.online_stdev = None
-        self.dev_accum = None
-        self.splitting_index = segment
-        
-        
-    def __iter__(self):
-        if self is not None:
-            if self.hasLeftChild():
-                for node in self.left:
-                    yield node
-            for _ in range(self.count):
-                yield self
-            if self.hasRightChild():
-                for node in self.right:
-                    yield node
-                    
-    def __len__(self):#expensive O(n) version
-        start=0
-        for node in self:
-            start += 1
-        return start
-    
-    def __getitem__(self, i):
-        return self.ithorder(i+1)
-    
-    def __contains__(self, data):
-        return self.search(data) is not None
-
-class Tree_Initializer():
-    def __init__(self, threshold = 10, wordlength = 16):
-        self.tree = BinarySearchTree(threshold=threshold, wordlength=wordlength)
-        words = [list('{0:b}'.format(i).zfill(int(np.log(2**wordlength-1)/np.log(2))+1)) for i in range(2**wordlength)]
-        for i in range(2**wordlength):
-            self.tree.addChild(words[i],threshold,wordlength)
-        
