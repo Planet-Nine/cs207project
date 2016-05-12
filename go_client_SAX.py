@@ -173,10 +173,10 @@ if __name__=='__main__':
             import matplotlib.pyplot as plt
  
             _, res = self.client.sim_search_SAX(self.arg)
-            print(res)
             if res:
+                _, res2 = self.client.select(metadata_dict={'pk':res}, fields=['ts'])
                 plt.plot(self.arg.times(), self.arg.values(),label='query')
-                plt.plot(res[0], res[1],label='closest match')
+                plt.plot(res2[res]['ts'][0], res2[res]['ts'][1],label='closest match')
                 plt.legend(loc='best',fontsize=12)
                 plt.show()
             else:
