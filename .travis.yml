@@ -18,7 +18,7 @@ before_install:
   
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose pandas statsmodels
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose pandas statsmodels tornado
   - conda install --yes pytest pytest-cov
   - conda install --yes ply
   - conda install --yes -c omnia python-coveralls=2.5.0
