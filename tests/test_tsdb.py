@@ -27,6 +27,52 @@ def tsmaker(m, s, j):
 
 class MyTest(unittest.TestCase):
     
+    def test_badinput(self):
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':int}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, threshold='a')
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, wordlength='a')
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, threshold=-10)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, wordlength=10)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, tslen=300)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, tslen=8)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, cardinality=10.5)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, cardinality=10)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, cardinality=128)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', load='yes')
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite='yes')
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname=123, overwrite=True)
+
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'DELETE':{'type':bool, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'mean:ie':{'type':float, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'mean':{'type':dict, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB([{'type':str, 'index':None}, {'type':float, 'index':1}], 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':int, 'index':None}, 'mean':{'type':float, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'd_vp-mean':{'type':float, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'vp':{'type':float, 'index':1}}, 'pk', dbname='testdb', overwrite=True)
+        with self.assertRaises(ValueError):
+            db = PersistentDB({'pk':{'type':str, 'index':None}, 'vp':{'type':bool, 'index':1}}, 'mean', dbname='testdb', overwrite=True)
+
+
     def test_db_tsinsert(self):
         ts1 = TimeSeries([1,2,3],[4,5,6])
         ts2 = TimeSeries([1,2,3],[4,5,6])
@@ -153,6 +199,8 @@ class MyTest(unittest.TestCase):
             db.upsert_meta("ts-{}".format(i), {'mean':new_ts.mean(), 'std':new_ts.std()})
             saveinfo["ts-{}".format(i)] = new_ts.mean()
 
+        db.add_vp("ts-4")
+        db.add_vp()
         db.delete_ts("ts-4")
 
         newdb = PersistentDB(schema, 'pk', dbname='testdb', load=True)

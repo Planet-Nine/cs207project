@@ -72,19 +72,19 @@ class PersistentDB:
             raise ValueError("Threshold must be greater than zero")
         if wordlength <= 0:
             raise ValueError("Word length must be greater than zero")
-        if '{0:b}'.format(wordlength)[-1] != '0':
+        if '1' in '{0:b}'.format(wordlength)[1:]:
             raise ValueError("Word length must be a power of two")
         if not isinstance(tslen, int):
             raise ValueError("TimeSeries length must be of type int")
         if tslen < wordlength:
             raise ValueError("TimeSeries length must be greater than or equal to the word length")
-        if '{0:b}'.format(tslen)[-1] != '0':
+        if '1' in '{0:b}'.format(tslen)[1:]:
             raise ValueError("TimeSeries length must be a power of two")
         if not isinstance(cardinality, int):
             raise ValueError("Cardinality must be of type int")
         if cardinality <= 0:
             raise ValueError("Cardinality must be greater than zero")
-        if '{0:b}'.format(cardinality)[-1] != '0':
+        if '1' in '{0:b}'.format(cardinality)[1:]:
             raise ValueError("Cardinality must be a power of two")
         if cardinality > 64:
             raise ValueError("Cardinalities greater than 64 are not supported")    
@@ -97,7 +97,9 @@ class PersistentDB:
         if isinstance(schema, dict):
             for field in schema:
                 if field == 'DELETE':
-                    raise ValueError("The fieldname 'DELETE' is forbidden.")
+                    raise ValueError("The fieldname 'DELETE' is forbidden")
+                if ':' in field:
+                    raise ValueError("Field names may not contain the ':' character")
                 if field != 'ts':   
                     if 'type' not in schema[field]:
                         raise ValueError("Schema must specify type for each non-ts field")
@@ -261,11 +263,21 @@ class PersistentDB:
 
         self.update_indices(pk)
 
+    def del_vp(self, vp):
+        """ Removes the d_vp-vp field from all rows """
+        for pk in self.rows:
+            if pk != vp:
+                del self.rows[pk]['d_vp-'+vp]
+        self.vps.remove(vp)
+        del self.indexes['d_vp-'+vp]
 
-    def delete_ts(self, pk):    # Delete values from trees
+    def delete_ts(self, pk):    
         if pk in self.rows:
             for field in self.rows[pk]:
-                if self.schema[field]['index'] is not None:
+                if field[:5] == 'd_vp-':
+                    if field[5:] != pk:
+                        self.indexes[field].delete(self.rows[pk][field], pk)
+                elif self.schema[field]['index'] is not None:
                     if self.schema[field]['type'] in [int, float]:
                         self.indexes[field].delete(self.rows[pk][field], pk)
                     else:
@@ -277,8 +289,6 @@ class PersistentDB:
             fd.write(pk+':DELETE:0\n')
             fd.close()
         if pk in self.rows_SAX:
-            if self.rows_SAX[pk]['vp'] == True:
-                self.del_vp(pk)
             rep = isax_indb(self.rows_SAX[pk]['ts'],self.card,self.wordlength)
             self.SAX_tree.delete(rep,pk)
             del self.rows_SAX[pk]
@@ -348,13 +358,6 @@ class PersistentDB:
             ts2 = self.rows[key]['ts']
             self.upsert_meta(key, {'d_vp-'+pk:self.dist(ts1,ts2)})
         
-    def del_vp(self, vp):
-        """ Removes the d_vp-vp field from all rows """
-        for pk in self.rows:
-            del self.rows[pk]['d_vp-'+vp]
-        self.vps.remove(vp)
-        del self.indexes['d_vp-'+vp]
-
     def simsearch_SAX(self, ts):
         if isinstance(ts,TimeSeries):
             ts = [ts.time,ts.data]
