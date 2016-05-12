@@ -89,8 +89,6 @@ class MyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             db.insert_ts('ts1', ts2)
         with self.assertRaises(ValueError):
-            db.insert_ts(1, ts2)
-        with self.assertRaises(ValueError):
             db.insert_ts('ts:1', ts2)
         with self.assertRaises(ValueError):
             db.insert_ts('ts1', [[1,2,3],[4,5,6]])
