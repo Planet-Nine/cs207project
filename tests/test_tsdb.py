@@ -33,13 +33,21 @@ class MyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, threshold='a')
         with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 12, dbname='testdb', overwrite=True, threshold='a')
+        with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, wordlength='a')
         with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, threshold=-10)
         with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, wordlength=-10)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, cardinality=-10)
+        with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, wordlength=10)
         with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, tslen=300)
+        with self.assertRaises(ValueError):
+            db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, tslen='256')
         with self.assertRaises(ValueError):
             db = PersistentDB(schema, 'pk', dbname='testdb', overwrite=True, tslen=8)
         with self.assertRaises(ValueError):
@@ -81,6 +89,10 @@ class MyTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             db.insert_ts('ts1', ts2)
         with self.assertRaises(ValueError):
+            db.insert_ts(1, ts2)
+        with self.assertRaises(ValueError):
+            db.insert_ts('ts:1', ts2)
+        with self.assertRaises(ValueError):
             db.insert_ts('ts1', [[1,2,3],[4,5,6]])
         db.insert_ts('ts2', ts2)
         db.insert_ts('ts3', ts2)
@@ -100,6 +112,7 @@ class MyTest(unittest.TestCase):
         db.insert_ts('one', TimeSeries([1,2,3],[4,5,6]))
         db.insert_ts('two', TimeSeries([7,8,9],[3,4,5]))
         db.insert_ts('negone', TimeSeries([1,2,3],[-4,-5,-6]))
+        db.upsert_meta('one', {'order':3})
         db.upsert_meta('one', {'order':1, 'mean':5})
         db.upsert_meta('two', {'order':2, 'mean':4})
         db.upsert_meta('negone', {'order':-1, 'mean':-5})
@@ -202,6 +215,8 @@ class MyTest(unittest.TestCase):
         db.add_vp("ts-4")
         db.add_vp()
         db.delete_ts("ts-4")
+        pks, fields = db.select(meta={'vp':True}, fields=None)
+        self.assertEqual(len(pks),1)
 
         newdb = PersistentDB(schema, 'pk', dbname='testdb', load=True)
         pks, fields = db.select(meta={}, fields=['mean'])
