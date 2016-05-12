@@ -46,7 +46,6 @@ class PersistentDB:
             If load=False, whether to overwrite an existing database.
         dist : function
             Calculates the distance between two TimeSeries objects, must take arguments (ts1, ts2)
-
         Attributes
         ----------
         indexes : dict
@@ -185,9 +184,9 @@ class PersistentDB:
                     tsarray = np.load(self.dbname+"_ts/"+pk+"_ts.npy")
                     self.rows[pk]['ts'] = TimeSeries(tsarray[0,:], tsarray[1,:])
                     self.tslen = tsarray.shape[1]
-                    tsarray2 = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
-                    x1 = np.linspace(min(tsarray2[0,:]),max(tsarray2[0,:]), self.tslen_SAX)
-                    ts_SAX_data = interp1d(tsarray2[0,:], tsarray2[1,:])(x1)
+                    #tsarray2 = np.load(self.dbname+"_ts_SAX/"+pk+"_ts_SAX.npy")
+                    x1 = np.linspace(min(tsarray[0,:]),max(tsarray[0,:]), self.tslen_SAX)
+                    ts_SAX_data = interp1d(tsarray[0,:], tsarray[1,:])(x1)
                     ts_SAX_time = x1
                     ts_SAX = TimeSeries(ts_SAX_time,ts_SAX_data)
                     self.rows_SAX[pk]['ts'] = ts_SAX
@@ -323,7 +322,6 @@ class PersistentDB:
     def add_vp(self, pk=None):
         """
         Adds pk as a vantage point
-
         Parameters
         ----------
         pk : str or None
