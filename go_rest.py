@@ -39,8 +39,9 @@ def main():
 
     for i in range(5):
         client.add_vp()
-
-    _, results = client.select(fields=['vp', 'd_vp-ts-25'])
+    client.add_vp('ts-25')
+    response = client.select(fields=['vp', 'd_vp-ts-25'])
+    results = response.json()['payload']
     for k in results:
          print(k, results[k])
 
