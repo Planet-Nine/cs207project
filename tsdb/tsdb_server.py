@@ -163,32 +163,32 @@ class TSDBProtocol(asyncio.Protocol):
             status = TSDBStatus.OK  # until proven otherwise.
             response = TSDBOp_Return(status, None)  # until proven otherwise.
             try:
-                op = TSDBOp.from_json(msg)
+                op = TSDBOp.from_json(msg)            
+                if status is TSDBStatus.OK:
+                    if isinstance(op, TSDBOp_InsertTS):
+                        response = self._insert_ts(op)
+                    elif isinstance(op, TSDBOp_DeleteTS):
+                        response = self._delete_ts(op)
+                    elif isinstance(op, TSDBOp_AddVP):
+                        response = self._add_vp(op)
+                    elif isinstance(op, TSDBOp_SimSearch):
+                        response = self._simsearch(op)
+                    elif isinstance(op, TSDBOp_UpsertMeta):
+                        response = self._upsert_meta(op)
+                    elif isinstance(op, TSDBOp_Select):
+                        response = self._select(op)
+                    elif isinstance(op, TSDBOp_SimsearchSAX):
+                        response = self._sim_search_SAX(op)
+                    elif isinstance(op, TSDBOp_AugmentedSelect):
+                        response = self._augmented_select(op)
+                    elif isinstance(op, TSDBOp_AddTrigger):
+                        response = self._add_trigger(op)
+                    elif isinstance(op, TSDBOp_RemoveTrigger):
+                        response = self._remove_trigger(op)
+                    else:
+                        response = TSDBOp_Return(TSDBStatus.UNKNOWN_ERROR, op['op'])
             except TypeError as e:
                 response = TSDBOp_Return(TSDBStatus.INVALID_OPERATION, None)
-            if status is TSDBStatus.OK:
-                if isinstance(op, TSDBOp_InsertTS):
-                    response = self._insert_ts(op)
-                elif isinstance(op, TSDBOp_DeleteTS):
-                    response = self._delete_ts(op)
-                elif isinstance(op, TSDBOp_AddVP):
-                    response = self._add_vp(op)
-                elif isinstance(op, TSDBOp_SimSearch):
-                    response = self._simsearch(op)
-                elif isinstance(op, TSDBOp_UpsertMeta):
-                    response = self._upsert_meta(op)
-                elif isinstance(op, TSDBOp_Select):
-                    response = self._select(op)
-                elif isinstance(op, TSDBOp_SimsearchSAX):
-                    response = self._sim_search_SAX(op)
-                elif isinstance(op, TSDBOp_AugmentedSelect):
-                    response = self._augmented_select(op)
-                elif isinstance(op, TSDBOp_AddTrigger):
-                    response = self._add_trigger(op)
-                elif isinstance(op, TSDBOp_RemoveTrigger):
-                    response = self._remove_trigger(op)
-                else:
-                    response = TSDBOp_Return(TSDBStatus.UNKNOWN_ERROR, op['op'])
             print('S>response',response.to_json())
             self.conn.write(serialize(response.to_json()))
             self.conn.close()
