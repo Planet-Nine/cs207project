@@ -192,6 +192,10 @@ class MyTest(unittest.TestCase):
             db.insert_ts("ts-{}".format(i), tsmaker(m, s, j))
             db.upsert_meta("ts-{}".format(i), {'mean':new_ts.mean(), 'std':new_ts.std()})
 
+        randi = set(np.random.randint(0,n_add, size=5))
+        for i in randi:
+            db.delete_ts("ts-{}".format(i))
+
         pks, fields = db.select(meta={'mean':{'<=':0.5}, 'std':{'>':2}}, fields=['mean', 'std'])
         for row in fields:
             self.assertLessEqual(row['mean'], 0.5)
