@@ -20,7 +20,15 @@ RODRICK TO-DO: Describe setup of SAX tree
 
 ##### REST API
 
-HAROLD TO-DO: Describe setup of REST API
+The REST API provides the a way to interact with the database via HTML. This is implemented with tornado in an asynchronous manner. Both the listening for HTML commands and querying the database is implemented in one event loop. Seven operations are currently supported. 
+1. Inserting time series
+2. Adding vantage point
+3. Deleting time series
+4. Upsert meta information,
+5. Select
+6. Augmented select
+7. Similarity Search
+
 
 ## Installation/Usage
 
@@ -67,4 +75,10 @@ TO-DO: Describe general setup.
 
 ##### REST API
 
-HAROLD TO-DO: Instructions for running api
+Instructions for running api
+
+1. Run the server at port 9999(example: go_server.py).
+2. Run the REST API web client(rest_api.py). 
+3. Past HTML commands to REST API web client as needed. (example: go_rest.py)
+
+
