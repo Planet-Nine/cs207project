@@ -79,6 +79,6 @@ Instructions for running api
 
 1. Run the server at port 9999(example: go_server.py).
 2. Run the REST API web client(rest_api.py). 
-3. Past HTML commands to REST API web client as needed. (example: go_rest.py)
+3. Past HTML commands to REST API web client (current port 8080) as needed. (example: go_rest.py)
 
 
