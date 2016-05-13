@@ -367,11 +367,19 @@ class PersistentDB:
         n = self.SAX_tree.search(rep)
         closestpk = None
         pkdist = None
-        for pk in n.ts:
-            thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
-            if pkdist is None or thisdist < pkdist:
-                closestpk = pk
-                pkdist = thisdist
+        if n.ts:
+            for pk in n.ts:
+                thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
+                if pkdist is None or thisdist < pkdist:
+                    closestpk = pk
+                    pkdist = thisdist
+        else:
+            n = self.SAX_tree.search2(rep)
+            for pk in n.ts:
+                thisdist = self.dist(ts_SAX, self.rows_SAX[pk]['ts'])
+                if pkdist is None or thisdist < pkdist:
+                    closestpk = pk
+                    pkdist = thisdist
 
         return closestpk
         # if closestpk:

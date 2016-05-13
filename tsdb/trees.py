@@ -383,7 +383,36 @@ class SAXTree(BinaryTree):
                     return self.right.search(rep)
                 else:
                     return self.left.search(rep)
-        
+    
+    def search2(self, rep):
+        if self.parent == None:
+            children = []
+            for i, child in enumerate(self.children):
+                if child.splitting_index is not None or len(child.ts)>0:
+                    children += [child]
+            dists = np.zeros(len(children))
+            num0 = self.word2number(rep)
+            for i, child in enumerate(children):
+                num1 = self.word2number(child.SAX)
+                dists[i] = np.linalg.norm(num1-num0)
+            index = np.argmin(dists)
+            return children[index].search2(rep)
+        elif self.right == None and self.left == None:
+            return self
+        else:
+            dists = np.zeros(2)
+            num0 = self.word2number(rep)
+            children = []
+            if self.right.splitting_index is not None or len(self.right.ts)>0:
+                children += [self.right]
+            if self.left.splitting_index is not None or len(self.left.ts)>0:
+                children += [self.left]
+            for i, child in enumerate(children):
+                num1 = self.word2number(child.SAX)
+                dists[i] = np.linalg.norm(num1-num0)
+            index = np.argmin(dists)
+            return children[index].search2(rep)
+            
     def delete(self, rep, pk):        
         n = self.search(rep,pk)
         index = n.ts.index(pk)
@@ -437,24 +466,31 @@ class SAXTree(BinaryTree):
         segmentToSplit = None
         if self.SAX is not None:
             diff = None
+            diffs = np.zeros(self.word_length)
+            diffs = diffs+10.
             for i,s in enumerate(self.SAX):
                 b = self.getBreakPoint(s) 
                 if b <= self.online_mean[i] + 3*self.online_stdev[i] and b >= self.online_mean[i] - 3*self.online_stdev[i]:
                     if diff is None or np.abs(self.online_mean[i] - b) < diff:
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
+                        diffs[i] = diff
             
             if segmentToSplit == None:
                 diff = None
+                diffs = np.zeros(self.word_length)
+                diffs = diffs + 10.
                 for i,s in enumerate(self.SAX):
                     b = self.getBreakPoint(s) 
                     if diff is None or np.abs(self.online_mean[i] - b) < diff:
                         segmentToSplit = i
                         diff = np.abs(self.online_mean[i] - b)
+                        diffs[i] = diff
                 
-            self.IncreaseCardinality(segmentToSplit)
+            self.IncreaseCardinality(segmentToSplit,np.argsort(diffs),0)
     
-    def IncreaseCardinality(self, segment):
+    def IncreaseCardinality(self, segment,order,index):
+        segment = order[index]
         if self.SAX is None:
             raise ValueError('Cannot increase cardinality of root node')
         newSAXupper = list(self.SAX)
@@ -464,7 +500,8 @@ class SAXTree(BinaryTree):
         newtsupper = []
         newtslower = []
         newts_SAXupper = []
-        newts_SAXlower = []
+        newts_SAXlower = [] 
+        t = 0
         l = len(newSAXupper[segment])
         for i,word in enumerate(self.ts_SAX):
             if len(word[segment])<l:
@@ -472,7 +509,12 @@ class SAXTree(BinaryTree):
                     lengths = len([i for i, j in enumerate(self.ts) if j == ts])
                     if lengths > 1:
                         raise ValueError("Inserted same time series twice")
-                raise ValueError("Overflow error, consider increasing threshold or cardinality")    
+                if index == len(order):
+                    raise ValueError("Overflow error, consider increasing threshold or cardinality")
+                else:
+                    self.IncreaseCardinality(segment,order,index+1)
+                    t = 1
+                    break
             if word[segment][l-1] == '1':
                 newts_SAXupper += [word]
                 newtsupper += [self.ts[i]]
@@ -480,23 +522,24 @@ class SAXTree(BinaryTree):
                 newts_SAXlower += [word]
                 newtslower += [self.ts[i]]
         
-        self.addLeftChild(rep=newSAXlower,threshold=self.th, wordlength=self.word_length)
-        self.addRightChild(rep=newSAXupper,threshold=self.th, wordlength=self.word_length)
-        for word in newts_SAXupper:
-            self.right.mean_std_calculator(word)
-        self.right.ts = list(newtsupper)
-        self.right.ts_SAX = list(newts_SAXupper)
-        for word in newts_SAXlower:
-            self.left.mean_std_calculator(word)
-        self.left.ts = list(newtslower)
-        self.left.ts_SAX = list(newts_SAXlower)
-        self.ts = []
-        self.ts_SAX = []
-        self.count = 0
-        self.online_mean = None
-        self.online_stdev = None
-        self.dev_accum = None
-        self.splitting_index = segment
+        if t == 0:
+            self.addLeftChild(rep=newSAXlower,threshold=self.th, wordlength=self.word_length)
+            self.addRightChild(rep=newSAXupper,threshold=self.th, wordlength=self.word_length)
+            for word in newts_SAXupper:
+                self.right.mean_std_calculator(word)
+            self.right.ts = list(newtsupper)
+            self.right.ts_SAX = list(newts_SAXupper)
+            for word in newts_SAXlower:
+                self.left.mean_std_calculator(word)
+            self.left.ts = list(newtslower)
+            self.left.ts_SAX = list(newts_SAXlower)
+            self.ts = []
+            self.ts_SAX = []
+            self.count = 0
+            self.online_mean = None
+            self.online_stdev = None
+            self.dev_accum = None
+            self.splitting_index = segment
         
         
     def __iter__(self):
