@@ -47,18 +47,27 @@ class TSDBProtocol(asyncio.Protocol):
         return TSDBOp_Return(TSDBStatus.OK, op['op'])
 
     def _simsearch(self, op):
-        match = self.server.db.simsearch(op['ts'])
-        self._run_trigger('simsearch', [op['ts']])
+        try:
+            match = self.server.db.simsearch(op['ts'])
+            self._run_trigger('simsearch', [op['ts']])
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         return TSDBOp_Return(TSDBStatus.OK, op['op'], match)
 
     def _upsert_meta(self, op):
-        self.server.db.upsert_meta(op['pk'], op['md'])
-        self._run_trigger('upsert_meta', [op['pk']])
+        try:
+            self.server.db.upsert_meta(op['pk'], op['md'])
+            self._run_trigger('upsert_meta', [op['pk']])
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         return TSDBOp_Return(TSDBStatus.OK, op['op'])
 
     def _select(self, op):
-        loids, fields = self.server.db.select(op['md'], op['fields'], op['additional'])
-        self._run_trigger('select', loids)
+        try:
+            loids, fields = self.server.db.select(op['md'], op['fields'], op['additional'])
+            self._run_trigger('select', loids)
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         if fields is not None:
             d = OrderedDict(zip(loids, fields))
             return TSDBOp_Return(TSDBStatus.OK, op['op'], d)
@@ -75,15 +84,24 @@ class TSDBProtocol(asyncio.Protocol):
     
     def _augmented_select(self, op):
         "run a select and then synchronously run some computation on it"
-        loids, fields = self.server.db.select(op['md'], None, op['additional'])
-        proc = op['proc']  # the module in procs
-        arg = op['arg']  # an additional argument, could be a constant
-        target = op['target'] #not used to upsert any more, but rather to
-        # return results in a dictionary with the targets mapped to the return
-        # values from proc_main
-        mod = import_module('procs.'+proc)
-        storedproc = getattr(mod,'proc_main')
-        results=[]
+        try:
+            loids, fields = self.server.db.select(op['md'], None, op['additional'])
+            proc = op['proc']  # the module in procs
+            arg = op['arg']  # an additional argument, could be a constant
+            target = op['target'] #not used to upsert any more, but rather to
+            # return results in a dictionary with the targets mapped to the return
+            # values from proc_main
+            try:
+                mod = import_module('procs.'+proc)
+            except:
+                raise ValueError("Module '{}' does not exist".format('procs.'+proc)) 
+            try:
+                storedproc = getattr(mod,'proc_main')
+            except:
+                raise ValueError("Module '{}' has no attribute 'proc_main'".format(str(mod)))
+            results=[]
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         for pk in loids:
             row = self.server.db.rows[pk]
             result = storedproc(pk, row, arg)
@@ -91,20 +109,32 @@ class TSDBProtocol(asyncio.Protocol):
         return TSDBOp_Return(TSDBStatus.OK, op['op'], dict(zip(loids, results)))
 
     def _add_trigger(self, op):
-        trigger_proc = op['proc']  # the module in procs
-        trigger_onwhat = op['onwhat']  # on what? eg `insert_ts`
-        trigger_target = op['target']  # if provided, this meta will be upserted
-        trigger_arg = op['arg']  # an additional argument, could be a constant
-        # FIXME: this import should have error handling
-        mod = import_module('procs.'+trigger_proc)
-        storedproc = getattr(mod,'main')
-        self.server.triggers[trigger_onwhat].append((trigger_proc, storedproc, trigger_arg, trigger_target))
+        try:
+            trigger_proc = op['proc']  # the module in procs
+            trigger_onwhat = op['onwhat']  # on what? eg `insert_ts`
+            trigger_target = op['target']  # if provided, this meta will be upserted
+            trigger_arg = op['arg']  # an additional argument, could be a constant
+            # FIXME: this import should have error handling
+            try:
+                mod = import_module('procs.'+trigger_proc)
+            except:
+                raise ValueError("Module '{}' does not exist".format('procs.'+trigger_proc)) 
+            try:
+                storedproc = getattr(mod,'main')
+            except:
+                raise ValueError("Module '{}' has no attribute 'main'".format(str(mod)))
+            self.server.triggers[trigger_onwhat].append((trigger_proc, storedproc, trigger_arg, trigger_target))
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         return TSDBOp_Return(TSDBStatus.OK, op['op'])
 
     def _remove_trigger(self, op):
-        trigger_proc = op['proc']
-        trigger_onwhat = op['onwhat']
-        trigs = self.server.triggers[trigger_onwhat]
+        try:
+            trigger_proc = op['proc']
+            trigger_onwhat = op['onwhat']
+            trigs = self.server.triggers[trigger_onwhat]
+        except:
+            return TSDBOp_Return(TSDBStatus.INVALID_KEY, op['op'])
         for t in trigs:
             if t[0]==trigger_proc:
                 trigs.remove(t)
