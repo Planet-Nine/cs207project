@@ -16,7 +16,29 @@ The state of the database is saved to file each time a change is made.  The base
 
 ##### Additional Feature
 
-RODRICK TO-DO: Describe setup of SAX tree
+The iSAX tree (a SAXTree object) is set up with the following arguments:
+- rep : list of strings, which is the iSAX representation of the node (the root node has no iSAX representation)
+- parent : SAXTree object, which is the parent of the given node 
+- threshold : integer, which is the maximum number of time series that a leaf node can store (default is 10) 
+- wordlength : integer, which is a multiple of 2 and is the number of symbols contained in an iSAX representation or the number of horizontal slices into which the time series are to be divided.
+
+It further has the attributes:
+- parent : which is simply parent from above
+- SAX : which is simply the rep from above
+- ts : a list containing the primary keys of the time series objects (it is nonempty only for leaf nodes)
+- ts_SAX : a list containing the iSAX representations of the time series objects (it is nonempty only for leaf nodes)
+- children : a list containing the SAXTree objects which are the children of the given node, it is nonempty only for the root node which has more then two children, the other nodes have only possibly right and left children 
+- th : which is simply threshold from above
+- count : the number of time series contained in a leaf node (for nodes that are not leaf nodes count is zero)
+- splitting_index : for internal nodes this is the index, or segment of the iSAX representation that is split in creating the two children nodes, leaf nodes and the root node have None as their splitting index  
+- word_length : is simply wordlength from above
+- online_mean : a numpy array containing the online means computed for each of the word_length segments from the time series in the node (nonzeros only for leaf nodes) 
+- online_stdev : a numpy array containing the online standard deviations computed for each of the word_length segments from the time series in the node (nonzeros only for leaf nodes) 
+- dev_accum : a numpy array of intermediate quantities in the calculation of the online standard deviation
+- left : left child node (SAXTree object) of given node  (None for leaf nodes and for root)
+- right : right child node (SAXTree object) of given node (None for leaf nodes and for root)
+
+To perform a iSAX search run both_SAX.sh. The prompts are relatively informative, but here are some additional hints. You should first finish with all the windows stemming from the window that starts with, "This is a brief introduction to the similarity search for time series", before moving on to the other window. Only load data from an existing database if one exists and the files should be ascii for the database and .npy for the time series. If unsure of how to format the files, run the code first without requesting to input a time series and after having the program generate some time series automatically, check the formatting of the files. A note on the threshold, it is effectively the maximum number of time series that will be returned by an internal search and that distances will be computed from. An important note is that it is possible for the search for a closest matching time series to return None. This is because the root node initially gets populated with 2^(word length) children representing all permutations of '1' and '0' among the (word length) symbols in the SAX representation. These children are not all filled with time series initially, so it is possible that a search stumbles on a node that does not actually have any time series associated with it, hence the None value returned. One solution is to input a number of time series at least a few times 2^(word length), a rough estimate of the appropriate number of time series would be order of the threshold times 2^(word length) (though 4 times usually works). Another important note is there is the potential for overflow of the SAX tree. The max depth of a search is equal to the logarithm of the cardinality with base 2. So if you input a cardinality of 64 the max depth of the tree is 6. This means that if there are too many time series inserted into the database the nodes may need to split more than 6 times causing overflow. Ways to remedy this situation are by increasing the cardinality or the threshold. 
 
 ##### REST API
 

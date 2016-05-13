@@ -55,9 +55,11 @@ def isax_indb(ts1,a,w,switch=0):
     series = stand(ts1,ts1.mean(),ts1.std())
     symbols = ['{0:b}'.format(i).zfill(int(np.log(a-1)/np.log(2))+1) for i in range(a)]
     if a in Breakpoints:
-        breakpoints = Breakpoints[a]#norm.ppf(np.array([i/a for i in range(1,a)]))
+        breakpoints = Breakpoints[a]
+    elif '1' not in '{0:b}'.format(wordlength)[1:]:
+        breakpoints = norm.ppf(np.array([i/a for i in range(1,a)]))
     else:
-        raise ValueError('Breakpoints do not exist for cardinality {}'.format(a)) 
+        raise ValueError('Breakpoints do not exist for cardinality {}'.format(a))
     breakpoints = np.array([*breakpoints,np.inf])
     T = np.zeros((w))
     if switch == 0:
@@ -75,10 +77,10 @@ def isax_indb(ts1,a,w,switch=0):
             if j == a-1:
                 SAX.append(symbols[j])
                 break
-            if T[i]<breakpoints[0]:
+            if T[i]<=breakpoints[0]:
                 SAX.append(symbols[0])
                 break
-            if T[i]>breakpoints[j] and T[i]<breakpoints[j+1]:
+            if T[i]>breakpoints[j] and T[i]<=breakpoints[j+1]:
                 SAX.append(symbols[j+1])
                 break
     return SAX
