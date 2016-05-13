@@ -42,11 +42,12 @@ To perform a iSAX search run both_SAX.sh. The prompts are relatively informative
 
 ##### REST API
 
-The REST API provides the a way to interact with the database via HTML. This is implemented with tornado in an asynchronous manner. Both the listening for HTML commands and querying the database is implemented in one event loop. Seven operations are currently supported. 
+The REST API provides the a way to interact with the database via HTML. This is implemented with tornado in an asynchronous manner. Both the listening for HTML commands and querying the database is implemented in one event loop. Seven operations are currently supported:
+
 1. Inserting time series
 2. Adding vantage point
 3. Deleting time series
-4. Upsert meta information,
+4. Upsert meta information
 5. Select
 6. Augmented select
 7. Similarity Search
@@ -57,7 +58,7 @@ The REST API provides the a way to interact with the database via HTML. This is 
 ##### Database population and searching
 
 The database is initialized by the creation of a new PersistentDB object, which takes the following arguments:
-- schema : dict, as specified above
+- schema : dict, as specified below
 - pkfield : str, primary key field which must match a fieldname in the schema
 - load : bool (optional, default=False), whether to load a database from an existing file 
 - dbname : str (optional, default="db"), the filename where the database will be stored and/or loaded
@@ -93,14 +94,20 @@ Further details on the functionality of the PersistentDB class may be found in t
 
 ##### Running the server
 
-TO-DO: Describe general setup.
+An example server can be found in go_server.py.  The important line to note here is
+
+``` db = PersistentDB(schema, 'pk', overwrite=True) ```
+
+This will create a new database named "db", overwriting any existing database of that name.  To load a database, set load=True, and if you would like the database to have a different name, set dbname="whateveryoulike".
+
+You may also change the schema in go_server.py, though note that it must conform to the requirements listed above.
 
 ##### REST API
 
-Instructions for running api
+Instructions for running API
 
 1. Run the server at port 9999(example: go_server.py).
 2. Run the REST API web client(rest_api.py). 
-3. Past HTML commands to REST API web client (current port 8080) as needed. (example: go_rest.py)
+3. Paste HTML commands to REST API web client (current port 8080) as needed. (example: go_rest.py)
 
 
