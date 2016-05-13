@@ -2,7 +2,7 @@
 [run]
 branch = True
 source = ./*
-omit = go_client_SAX.py
+omit = [go_client_SAX.py, go_server_SAX.py]
 
 [report]
 # Regexes for lines to exclude from consideration
